@@ -16,20 +16,57 @@ export function RankingScreen() {
   const fetchRanking = async () => {
     try {
       setLoading(true);
-      // Para o MVP, buscamos os times reais e simulamos a pontuação baseada em algum critério
-      // No futuro, teríamos uma tabela específica de "ranking" ou "pontuacao_total".
-      const { data, error } = await supabase
+      
+      // 1. Busca todos os times
+      const { data: timesData, error: timesError } = await supabase
         .from('times')
         .select('*');
 
-      if (error) throw error;
+      if (timesError) throw timesError;
       
-      // Simulando uma ordenação de pontos para a interface
-      const timesComPontos = (data || []).map((t, index) => ({
+      // 2. Busca todas as partidas finalizadas
+      const { data: partidasData, error: partidasError } = await supabase
+        .from('partidas')
+        .select('*')
+        .eq('status', 'encerrada');
+        
+      if (partidasError) throw partidasError;
+
+      // 3. Calcula os pontos
+      // Pontuação: 3 pontos por vitória, 1 por empate (se aplicável), 0 por derrota.
+      // Em matas-matas geralmente não tem empate. Apenas vitória = 3pts.
+      const pontuacaoPorTime: Record<string, number> = {};
+      
+      timesData.forEach(time => {
+        pontuacaoPorTime[time.id] = 0;
+      });
+
+      partidasData.forEach(partida => {
+        // Verifica quem ganhou
+        const placarA = partida.placar_a || 0;
+        const placarB = partida.placar_b || 0;
+        const setsA = partida.sets_a || 0;
+        const setsB = partida.sets_b || 0;
+        
+        let vencedorId = null;
+        if (setsA > setsB || placarA > placarB) {
+          vencedorId = partida.team_a_id;
+        } else if (setsB > setsA || placarB > placarA) {
+          vencedorId = partida.team_b_id;
+        }
+
+        if (vencedorId && pontuacaoPorTime[vencedorId] !== undefined) {
+          pontuacaoPorTime[vencedorId] += 3; // +3 pontos por vitória
+        }
+      });
+
+      // 4. Junta as informações e ordena
+      const timesComPontos = (timesData || []).map((t) => ({
         ...t,
-        pontos: 1500 - (index * 150) // Mock progressivo
+        pontos: pontuacaoPorTime[t.id] || 0
       }));
 
+      // Ordena do maior para o menor ponto
       setTimes(timesComPontos.sort((a, b) => b.pontos - a.pontos));
     } catch (error) {
       console.error("Erro ao buscar ranking:", error);
@@ -46,11 +83,11 @@ export function RankingScreen() {
         {/* 2º Lugar */}
         <View className="items-center mx-2">
           <View className="bg-gray-300 dark:bg-[#C0C0C0] p-1 rounded-full mb-2">
-            <Ionicons name="person-circle" size={48} color="#1A1A1A" />
+            <Ionicons name="person-circle" size={48} color="#1c1c1c" />
           </View>
           <Text className="text-gray-900 dark:text-white font-bold text-xs w-20 text-center" numberOfLines={1}>{times[1].nome}</Text>
           <Text className="text-gray-600 dark:text-[#C0C0C0] font-black">{times[1].pontos} pts</Text>
-          <View className="w-20 h-24 bg-gray-200 dark:bg-[#1A1A1A] border-t-2 border-gray-400 dark:border-[#C0C0C0] items-center justify-start pt-2 mt-2">
+          <View className="w-20 h-24 bg-gray-200 dark:bg-brand-surface border-t-2 border-gray-400 dark:border-[#C0C0C0] items-center justify-start pt-2 mt-2">
             <Text className="text-gray-600 dark:text-[#C0C0C0] font-black text-2xl">2</Text>
           </View>
         </View>
@@ -59,11 +96,11 @@ export function RankingScreen() {
         <View className="items-center mx-2">
           <Ionicons name="trophy" size={32} color="#FFD700" className="mb-1" />
           <View className="bg-[#FFD700] p-1 rounded-full mb-2">
-            <Ionicons name="person-circle" size={56} color="#1A1A1A" />
+            <Ionicons name="person-circle" size={56} color="#1c1c1c" />
           </View>
           <Text className="text-gray-900 dark:text-white font-bold text-sm w-20 text-center" numberOfLines={1}>{times[0].nome}</Text>
           <Text className="text-yellow-600 dark:text-[#FFD700] font-black">{times[0].pontos} pts</Text>
-          <View className="w-24 h-32 bg-gray-100 dark:bg-[#1A1A1A] border-t-2 border-[#FFD700] items-center justify-start pt-2 mt-2">
+          <View className="w-24 h-32 bg-gray-100 dark:bg-brand-surface border-t-2 border-[#FFD700] items-center justify-start pt-2 mt-2">
             <Text className="text-yellow-600 dark:text-[#FFD700] font-black text-3xl">1</Text>
           </View>
         </View>
@@ -71,11 +108,11 @@ export function RankingScreen() {
         {/* 3º Lugar */}
         <View className="items-center mx-2">
           <View className="bg-[#CD7F32] p-1 rounded-full mb-2">
-            <Ionicons name="person-circle" size={40} color="#1A1A1A" />
+            <Ionicons name="person-circle" size={40} color="#1c1c1c" />
           </View>
           <Text className="text-gray-900 dark:text-white font-bold text-xs w-20 text-center" numberOfLines={1}>{times[2].nome}</Text>
           <Text className="text-amber-700 dark:text-[#CD7F32] font-black">{times[2].pontos} pts</Text>
-          <View className="w-20 h-16 bg-gray-200 dark:bg-[#1A1A1A] border-t-2 border-[#CD7F32] items-center justify-start pt-2 mt-2">
+          <View className="w-20 h-16 bg-gray-200 dark:bg-brand-surface border-t-2 border-[#CD7F32] items-center justify-start pt-2 mt-2">
             <Text className="text-amber-700 dark:text-[#CD7F32] font-black text-xl">3</Text>
           </View>
         </View>
@@ -84,8 +121,8 @@ export function RankingScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-[#121212]">
-      <View className="px-6 pt-6 pb-4 border-b border-gray-200 dark:border-[#1A1A1A]">
+    <SafeAreaView className="flex-1 bg-[#f2ece0] dark:bg-brand-bg">
+      <View className="px-6 pt-6 pb-4 border-b border-[#d8ccb4] dark:border-brand-border">
         <Text className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Ranking Global</Text>
         <Text className="text-gray-500 dark:text-gray-400 text-sm">Acompanhe as maiores lendas da comunidade local.</Text>
       </View>
@@ -94,15 +131,15 @@ export function RankingScreen() {
       <View className="flex-row px-6 py-4">
         <TouchableOpacity 
           onPress={() => setFiltro('Futebol')}
-          className={`px-4 py-2 rounded-full mr-3 border ${filtro === 'Futebol' ? 'bg-[#005BBB] border-[#005BBB] dark:bg-[#82A0D8] dark:border-[#82A0D8]' : 'border-gray-300 dark:border-[#333] bg-white dark:bg-transparent shadow-sm'}`}
+          className={`px-4 py-2 rounded-full mr-3 border ${filtro === 'Futebol' ? 'bg-brand-primary border-brand-primary dark:bg-brand-electric-light dark:border-brand-electric-light' : 'border-gray-300 dark:border-brand-border-focus bg-[#e6ddca] dark:bg-transparent shadow-sm'}`}
         >
-          <Text className={filtro === 'Futebol' ? 'text-white dark:text-[#121212] font-bold' : 'text-gray-600 dark:text-gray-400'}>Futebol</Text>
+          <Text className={filtro === 'Futebol' ? 'text-white dark:text-[#0a0a0a] font-bold' : 'text-gray-600 dark:text-gray-400'}>Futebol</Text>
         </TouchableOpacity>
         <TouchableOpacity 
           onPress={() => setFiltro('Basquete')}
-          className={`px-4 py-2 rounded-full border ${filtro === 'Basquete' ? 'bg-[#005BBB] border-[#005BBB] dark:bg-[#82A0D8] dark:border-[#82A0D8]' : 'border-gray-300 dark:border-[#333] bg-white dark:bg-transparent shadow-sm'}`}
+          className={`px-4 py-2 rounded-full border ${filtro === 'Basquete' ? 'bg-brand-primary border-brand-primary dark:bg-brand-electric-light dark:border-brand-electric-light' : 'border-gray-300 dark:border-brand-border-focus bg-[#e6ddca] dark:bg-transparent shadow-sm'}`}
         >
-          <Text className={filtro === 'Basquete' ? 'text-white dark:text-[#121212] font-bold' : 'text-gray-600 dark:text-gray-400'}>Basquete</Text>
+          <Text className={filtro === 'Basquete' ? 'text-white dark:text-[#0a0a0a] font-bold' : 'text-gray-600 dark:text-gray-400'}>Basquete</Text>
         </TouchableOpacity>
       </View>
 
@@ -122,14 +159,14 @@ export function RankingScreen() {
               <Text className="text-gray-400 dark:text-gray-500 font-bold mb-4">RESTANTE DO RANKING</Text>
               
               {times.slice(3).map((time, index) => (
-                <View key={time.id} className="flex-row items-center bg-white dark:bg-[#1A1A1A] p-4 rounded-xl border border-gray-200 dark:border-[#2A2A2A] mb-3 shadow-sm">
+                <View key={time.id} className="flex-row items-center bg-[#e6ddca] dark:bg-brand-surface p-4 rounded-xl border border-[#d8ccb4] dark:border-brand-border-focus mb-3 shadow-sm">
                   <Text className="text-gray-400 dark:text-gray-500 font-black w-8 text-lg">{index + 4}</Text>
                   <Ionicons name="shield-half-outline" size={32} color="#888" className="mr-3" />
                   <View className="flex-1">
                     <Text className="text-gray-900 dark:text-white font-bold">{time.nome}</Text>
                     <Text className="text-gray-500 text-xs">{time.categoria}</Text>
                   </View>
-                  <Text className="text-[#005BBB] dark:text-[#82A0D8] font-black">{time.pontos} pts</Text>
+                  <Text className="text-brand-primary dark:text-brand-electric-light font-black">{time.pontos} pts</Text>
                 </View>
               ))}
             </View>

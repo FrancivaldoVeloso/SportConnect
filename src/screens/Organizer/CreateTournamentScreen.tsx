@@ -62,7 +62,6 @@ export function CreateTournamentScreen({ navigation }: any) {
       valor_inscricao: parseFloat(valorInscricao),
       descricao,
       capa_url: capaUrl,
-      categoria_genero: requiresGender ? categoriaGenero : null,
     });
 
     setLoading(false);
@@ -76,10 +75,10 @@ export function CreateTournamentScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-[#121212] p-4">
+    <SafeAreaView className="flex-1 bg-[#f2ece0] dark:bg-brand-bg p-4">
       <View className="flex-row items-center mb-6">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
-          <Text className="text-[#005BBB] dark:text-[#82A0D8] text-lg font-semibold">← Voltar</Text>
+          <Text className="text-brand-primary dark:text-brand-electric-light text-lg font-semibold">← Voltar</Text>
         </TouchableOpacity>
         <Text className="text-gray-900 dark:text-white text-2xl font-bold">Novo Torneio</Text>
       </View>
@@ -87,7 +86,7 @@ export function CreateTournamentScreen({ navigation }: any) {
       <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
         <TouchableOpacity 
           onPress={pickImage}
-          className={`border-2 border-dashed ${capaUrl ? 'border-[#005BBB] dark:border-[#82A0D8]' : 'border-gray-300 dark:border-[#333]'} rounded-xl items-center justify-center mb-6 h-48 overflow-hidden bg-white dark:bg-[#1A1A1A]`}
+          className={`border-2 border-dashed ${capaUrl ? 'border-brand-primary dark:border-brand-electric-light' : 'border-gray-300 dark:border-brand-border-focus'} rounded-xl items-center justify-center mb-6 h-48 overflow-hidden bg-[#e6ddca] dark:bg-brand-surface`}
         >
           {capaUrl ? (
             <Image source={{ uri: capaUrl }} style={{ width: '100%', height: '100%' }} />
@@ -124,11 +123,11 @@ export function CreateTournamentScreen({ navigation }: any) {
                 onPress={() => setModalidade(mod)}
                 className={`mr-3 px-5 py-2.5 rounded-full border ${
                   modalidade === mod 
-                    ? 'bg-[#005BBB] dark:bg-[#82A0D8] border-[#005BBB] dark:border-[#82A0D8]' 
-                    : 'bg-white dark:bg-[#1A1A1A] border-gray-200 dark:border-[#333]'
+                    ? 'bg-brand-primary dark:bg-brand-electric-light border-brand-primary dark:border-brand-electric-light' 
+                    : 'bg-[#e6ddca] dark:bg-brand-surface border-[#d8ccb4] dark:border-brand-border-focus'
                 }`}
               >
-                <Text className={`font-bold ${modalidade === mod ? 'text-white dark:text-[#121212]' : 'text-gray-700 dark:text-gray-300'}`}>
+                <Text className={`font-bold ${modalidade === mod ? 'text-white dark:text-[#0a0a0a]' : 'text-gray-700 dark:text-gray-300'}`}>
                   {mod}
                 </Text>
               </TouchableOpacity>
@@ -146,11 +145,11 @@ export function CreateTournamentScreen({ navigation }: any) {
                   onPress={() => setCategoriaGenero(cat)}
                   className={`mr-3 px-5 py-2.5 rounded-full border ${
                     categoriaGenero === cat 
-                      ? 'bg-[#005BBB] dark:bg-[#82A0D8] border-[#005BBB] dark:border-[#82A0D8]' 
-                      : 'bg-white dark:bg-[#1A1A1A] border-gray-200 dark:border-[#333]'
+                      ? 'bg-brand-primary dark:bg-brand-electric-light border-brand-primary dark:border-brand-electric-light' 
+                      : 'bg-[#e6ddca] dark:bg-brand-surface border-[#d8ccb4] dark:border-brand-border-focus'
                   }`}
                 >
-                  <Text className={`font-bold ${categoriaGenero === cat ? 'text-white dark:text-[#121212]' : 'text-gray-700 dark:text-gray-300'}`}>
+                  <Text className={`font-bold ${categoriaGenero === cat ? 'text-white dark:text-[#0a0a0a]' : 'text-gray-700 dark:text-gray-300'}`}>
                     {cat}
                   </Text>
                 </TouchableOpacity>
@@ -163,12 +162,12 @@ export function CreateTournamentScreen({ navigation }: any) {
           <Text className="text-gray-500 dark:text-gray-400 font-bold mb-2 ml-1 text-sm uppercase tracking-wider">Data de Início</Text>
           <TouchableOpacity 
             onPress={() => setShowDatePicker(true)}
-            className="bg-white dark:bg-[#1A1A1A] border border-gray-200 dark:border-[#333] rounded-xl px-4 py-4 flex-row items-center"
+            className="bg-[#e6ddca] dark:bg-brand-surface border border-[#d8ccb4] dark:border-brand-border-focus rounded-xl px-4 py-4 flex-row items-center"
           >
             <Text className="text-gray-900 dark:text-white font-bold flex-1">
               {dataInicio.toLocaleDateString('pt-BR')}
             </Text>
-            <Text className="text-[#005BBB] dark:text-[#82A0D8] text-xs font-bold uppercase">Alterar</Text>
+            <Text className="text-brand-primary dark:text-brand-electric-light text-xs font-bold uppercase">Alterar</Text>
           </TouchableOpacity>
         </View>
 
@@ -210,14 +209,14 @@ export function CreateTournamentScreen({ navigation }: any) {
         />
 
         <TouchableOpacity 
-          className="bg-[#005BBB] dark:bg-[#82A0D8] p-4 rounded-xl items-center mt-6 mb-8 shadow-sm"
+          className="bg-brand-primary dark:bg-brand-electric-light p-4 rounded-xl items-center mt-6 mb-8 shadow-sm"
           onPress={handleCreate}
           disabled={loading}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text className="text-white dark:text-[#121212] font-bold text-lg">Cadastrar Torneio</Text>
+            <Text className="text-white dark:text-[#0a0a0a] font-bold text-lg">Cadastrar Torneio</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

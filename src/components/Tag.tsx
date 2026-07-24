@@ -27,8 +27,8 @@ export function Tag({ status, label, className = '', ...props }: TagProps) {
       textClass = 'text-red-500';
       break;
     case 'em_andamento':
-      bgClass = 'bg-[#005BBB]/20';
-      textClass = 'text-[#005BBB]';
+      bgClass = 'bg-brand-primary/20';
+      textClass = 'text-brand-primary';
       break;
   }
 

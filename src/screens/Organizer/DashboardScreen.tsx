@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useContext } from 'react';
-import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert } from 'react-native';
+import { View, Text, ScrollView, TouchableOpacity, ActivityIndicator, RefreshControl, Alert, Image } from 'react-native';
 import { Card } from '../../components/Card';
 import { supabase } from '../../services/supabase';
 import { AuthContext } from '../../contexts/AuthContext';
@@ -109,21 +109,24 @@ export function DashboardScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-[#121212]">
+    <SafeAreaView className="flex-1 bg-[#f2ece0] dark:bg-brand-bg">
       {/* Header Fixo */}
-      <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#1A1A1A]">
-        <Text className="text-[#005BBB] dark:text-[#82A0D8] text-xl font-bold tracking-wider">Dashboard</Text>
+      <View className="flex-row items-center justify-between px-6 py-4 border-b border-[#d8ccb4] dark:border-brand-border">
+        <View className="flex-row items-center">
+          <Image source={require('../../../assets/logoSport.png')} style={{ width: 32, height: 32, marginRight: 8 }} resizeMode="contain" />
+          <Text className="text-brand-primary dark:text-brand-electric-light text-xl font-bold tracking-wider">Dashboard</Text>
+        </View>
         <Ionicons name="notifications-outline" size={24} color={isDark ? '#fff' : '#000'} />
       </View>
 
       <ScrollView 
         className="flex-1 p-4"
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? '#82A0D8' : '#005BBB'} />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={isDark ? '#3B82F6' : '#2563EB'} />
         }
       >
         {loading && !refreshing ? (
-          <ActivityIndicator size="large" color="#005BBB" className="mt-10" />
+          <ActivityIndicator size="large" color="#2563EB" className="mt-10" />
         ) : (
           <>
             {/* MINI-DASHBOARD (MÉTRICAS) */}
@@ -150,9 +153,9 @@ export function DashboardScreen({ navigation }: any) {
 
               <View className="flex-row space-x-4">
                 {/* Card de Arrecadação */}
-                <View className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-xl p-4 border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+                <View className="flex-1 bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-4 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
                   <View className="flex-row items-center mb-2">
-                    <Ionicons name="cash-outline" size={18} color={isDark ? '#82A0D8' : '#005BBB'} />
+                    <Ionicons name="cash-outline" size={18} color={isDark ? '#3B82F6' : '#2563EB'} />
                     <Text className="text-gray-500 dark:text-gray-400 text-xs uppercase font-bold ml-1 tracking-wider">Arrecadação</Text>
                   </View>
                   <Text className="text-gray-900 dark:text-white text-2xl font-black">
@@ -162,9 +165,9 @@ export function DashboardScreen({ navigation }: any) {
                 </View>
 
                 {/* Card de Ocupação */}
-                <View className="flex-1 bg-white dark:bg-[#1A1A1A] rounded-xl p-4 border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+                <View className="flex-1 bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-4 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
                   <View className="flex-row items-center mb-2">
-                    <Ionicons name="people-outline" size={18} color={isDark ? '#82A0D8' : '#005BBB'} />
+                    <Ionicons name="people-outline" size={18} color={isDark ? '#3B82F6' : '#2563EB'} />
                     <Text className="text-gray-500 dark:text-gray-400 text-xs uppercase font-bold ml-1 tracking-wider">Ocupação</Text>
                   </View>
                   <Text className="text-gray-900 dark:text-white text-2xl font-black">
@@ -179,17 +182,17 @@ export function DashboardScreen({ navigation }: any) {
             <Text className="text-gray-900 dark:text-white text-xl font-bold mb-4 ml-1">Meus Torneios</Text>
             
             {torneios.length === 0 ? (
-              <View className="items-center mt-4 bg-white dark:bg-[#1A1A1A] p-6 rounded-xl border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+              <View className="items-center mt-4 bg-[#e6ddca] dark:bg-brand-surface p-6 rounded-xl border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
                 <Ionicons name="trophy-outline" size={48} color="#888" />
                 <Text className="text-gray-500 dark:text-gray-400 mt-4 text-center">Você ainda não criou nenhum torneio.</Text>
               </View>
             ) : (
               torneios.map(torneio => (
-                <View key={torneio.id} className="bg-white dark:bg-[#1A1A1A] mb-4 rounded-xl p-5 border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+                <View key={torneio.id} className="bg-[#e6ddca] dark:bg-brand-surface mb-4 rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
                   <View className="flex-row justify-between items-start mb-2">
                     <Text className="text-gray-900 dark:text-white font-bold text-lg flex-1">{torneio.nome}</Text>
-                    <View className="bg-gray-100 dark:bg-[#2A2A2A] px-2 py-1 rounded-md ml-2">
-                      <Text className="text-[#005BBB] dark:text-[#82A0D8] text-xs font-bold uppercase">{torneio.modalidade}</Text>
+                    <View className="bg-gray-100 dark:bg-brand-border px-2 py-1 rounded-md ml-2">
+                      <Text className="text-brand-primary dark:text-brand-electric-light text-xs font-bold uppercase">{torneio.modalidade}</Text>
                     </View>
                   </View>
                   
@@ -200,7 +203,7 @@ export function DashboardScreen({ navigation }: any) {
                     </Text>
                   </View>
 
-                  <View className="flex-row justify-between mt-2 pt-4 border-t border-gray-100 dark:border-[#2A2A2A]">
+                  <View className="flex-row justify-between mt-2 pt-4 border-t border-gray-100 dark:border-brand-border-focus">
                     <View>
                       <Text className="text-gray-400 text-xs uppercase">Valor</Text>
                       <Text className="text-green-600 dark:text-[#4ADE80] font-bold">R$ {torneio.valor_inscricao}</Text>
@@ -211,13 +214,21 @@ export function DashboardScreen({ navigation }: any) {
                     </View>
                   </View>
 
-                  <View className="flex-row justify-end mt-4 pt-4 border-t border-gray-100 dark:border-[#2A2A2A] space-x-4">
+                  <View className="flex-row justify-end mt-4 pt-4 border-t border-gray-100 dark:border-brand-border-focus space-x-2">
+                    <TouchableOpacity 
+                      onPress={() => navigation.navigate('TournamentManager', { torneio })}
+                      className="flex-row items-center bg-brand-primary dark:bg-brand-electric-light px-3 py-1.5 rounded-lg"
+                    >
+                      <Ionicons name="settings" size={14} color={isDark ? "#0a0a0a" : "#fff"} />
+                      <Text className="ml-1 text-white dark:text-[#0a0a0a] text-xs font-bold uppercase">Gerenciar</Text>
+                    </TouchableOpacity>
+                    
                     <TouchableOpacity 
                       onPress={() => navigation.navigate('EditTournament', { torneio })}
                       className="flex-row items-center bg-gray-100 dark:bg-[#333] px-3 py-1.5 rounded-lg"
                     >
-                      <Ionicons name="pencil" size={14} color={isDark ? "#82A0D8" : "#005BBB"} />
-                      <Text className="ml-1 text-[#005BBB] dark:text-[#82A0D8] text-xs font-bold uppercase">Editar</Text>
+                      <Ionicons name="pencil" size={14} color={isDark ? "#3B82F6" : "#2563EB"} />
+                      <Text className="ml-1 text-brand-primary dark:text-brand-electric-light text-xs font-bold uppercase">Editar</Text>
                     </TouchableOpacity>
                     
                     <TouchableOpacity 
@@ -240,10 +251,10 @@ export function DashboardScreen({ navigation }: any) {
 
       {/* Botão Flutuante */}
       <TouchableOpacity 
-        className="absolute bottom-6 right-6 bg-[#005BBB] dark:bg-[#82A0D8] w-16 h-16 rounded-full items-center justify-center shadow-[0_4px_10px_rgba(0,91,187,0.4)]"
+        className="absolute bottom-6 right-6 bg-brand-primary dark:bg-brand-electric-light w-16 h-16 rounded-full items-center justify-center shadow-[0_4px_10px_rgba(0,91,187,0.4)]"
         onPress={() => navigation.navigate('CreateTournament')}
       >
-        <Ionicons name="add" size={32} color={isDark ? "#121212" : "#fff"} />
+        <Ionicons name="add" size={32} color={isDark ? "#0a0a0a" : "#fff"} />
       </TouchableOpacity>
     </SafeAreaView>
   );

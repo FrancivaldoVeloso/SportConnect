@@ -25,6 +25,7 @@ CREATE TABLE IF NOT EXISTS public.usuarios (
     tipo_perfil perfil_usuario NOT NULL DEFAULT 'atleta',
     modalidade_principal VARCHAR,
     foto_perfil VARCHAR,
+    expo_push_token VARCHAR,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -70,14 +71,16 @@ CREATE TABLE IF NOT EXISTS public.inscricoes (
 
 -- 6. Tabela: partidas
 CREATE TABLE IF NOT EXISTS public.partidas (
-    id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-    torneio_id UUID NOT NULL REFERENCES public.torneios(id) ON DELETE CASCADE,
+    id VARCHAR PRIMARY KEY DEFAULT uuid_generate_v4()::text,
+    torneio_id UUID REFERENCES public.torneios(id) ON DELETE CASCADE,
     time_a_id UUID REFERENCES public.times(id) ON DELETE SET NULL,
     time_b_id UUID REFERENCES public.times(id) ON DELETE SET NULL,
     placar_a INT NOT NULL DEFAULT 0,
     placar_b INT NOT NULL DEFAULT 0,
+    sets_a INT NOT NULL DEFAULT 0,
+    sets_b INT NOT NULL DEFAULT 0,
     status status_partida NOT NULL DEFAULT 'agendada',
-    proxima_partida_id UUID REFERENCES public.partidas(id) ON DELETE SET NULL,
+    proxima_partida_id VARCHAR REFERENCES public.partidas(id) ON DELETE SET NULL,
     fase_torneio VARCHAR,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()

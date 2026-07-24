@@ -16,6 +16,11 @@ export function ProfileScreen() {
   const [pushEnabled, setPushEnabled] = useState(false);
   const [senhaModalVisible, setSenhaModalVisible] = useState(false);
   const [novaSenha, setNovaSenha] = useState('');
+
+  // Editar Perfil States
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editNome, setEditNome] = useState('');
+  const [editModalidade, setEditModalidade] = useState('');
   
   // Dados do Dashboard
   const [meusTorneios, setMeusTorneios] = useState<any[]>([]);
@@ -29,6 +34,10 @@ export function ProfileScreen() {
 
   useEffect(() => {
     fetchDashboardData();
+    if (user) {
+      setEditNome(user.nome || '');
+      setEditModalidade(user.modalidade_principal || '');
+    }
   }, [user]);
 
   const fetchDashboardData = async () => {
@@ -123,6 +132,28 @@ export function ProfileScreen() {
     }
   };
 
+  const handleSalvarPerfil = async () => {
+    if (!editNome.trim()) {
+      Alert.alert("Erro", "O nome não pode estar vazio.");
+      return;
+    }
+    try {
+      const { error } = await supabase
+        .from('usuarios')
+        .update({ nome: editNome, modalidade_principal: editModalidade })
+        .eq('id', user?.id);
+      if (error) throw error;
+      
+      if (user) {
+        await signIn({ ...user, nome: editNome, modalidade_principal: editModalidade });
+      }
+      Alert.alert("Sucesso", "Perfil atualizado com sucesso!");
+      setEditModalVisible(false);
+    } catch(e) {
+      Alert.alert("Erro", "Não foi possível atualizar o perfil.");
+    }
+  };
+
   const getBadgeColors = (perfil: string) => {
     switch(perfil) {
       case 'organizador': return { bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400', border: 'border-blue-200 dark:border-blue-800' };
@@ -135,17 +166,17 @@ export function ProfileScreen() {
   const renderAthleteDashboard = () => (
     <View className="mx-6 mt-6 space-y-6">
       {/* Card do Time */}
-      <View className="bg-white dark:bg-[#1A1A1A] rounded-xl p-5 border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+      <View className="bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-gray-900 dark:text-white font-bold text-lg">Meu Time</Text>
           <Ionicons name="shield" size={24} color={isDark ? '#FFD700' : '#EAB308'} />
         </View>
         {meuTime ? (
           <View>
-            <Text className="text-[#005BBB] dark:text-[#82A0D8] font-black text-xl mb-1">{meuTime.nome}</Text>
+            <Text className="text-brand-primary dark:text-brand-electric-light font-black text-xl mb-1">{meuTime.nome}</Text>
             <Text className="text-gray-500 dark:text-gray-400 text-sm">{meuTime.categoria}</Text>
             {user?.tipo_perfil === 'capitao' && (
-              <TouchableOpacity className="mt-4 bg-gray-100 dark:bg-[#2A2A2A] py-2 rounded-lg items-center">
+              <TouchableOpacity className="mt-4 bg-gray-100 dark:bg-brand-border py-2 rounded-lg items-center">
                 <Text className="text-gray-700 dark:text-white font-semibold text-sm">Gerenciar Atletas</Text>
               </TouchableOpacity>
             )}
@@ -156,11 +187,11 @@ export function ProfileScreen() {
       </View>
 
       {/* Histórico de Inscrições */}
-      <View className="bg-white dark:bg-[#1A1A1A] rounded-xl p-5 border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+      <View className="bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
         <Text className="text-gray-900 dark:text-white font-bold text-lg mb-4">Histórico de Inscrições</Text>
         {minhasInscricoes.length > 0 ? (
           minhasInscricoes.map(insc => (
-            <View key={insc.id} className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-[#2A2A2A]">
+            <View key={insc.id} className="flex-row items-center justify-between py-3 border-b border-gray-100 dark:border-brand-border-focus">
               <View className="flex-1 mr-2">
                 <Text className="text-gray-800 dark:text-gray-200 font-semibold" numberOfLines={1}>{insc.torneios?.nome || 'Torneio Desconhecido'}</Text>
               </View>
@@ -181,7 +212,7 @@ export function ProfileScreen() {
   const renderOrganizerDashboard = () => (
     <View className="mx-6 mt-6 space-y-6">
       {/* Resumo Financeiro */}
-      <View className="bg-[#005BBB] dark:bg-[#1E293B] rounded-xl p-6 shadow-sm relative overflow-hidden">
+      <View className="bg-brand-primary dark:bg-[#1E293B] rounded-xl p-6 shadow-sm relative overflow-hidden">
         <View className="absolute right-[-20] top-[-20] opacity-10">
           <Ionicons name="cash" size={120} color="#fff" />
         </View>
@@ -191,14 +222,14 @@ export function ProfileScreen() {
       </View>
 
       {/* Meus Torneios */}
-      <View className="bg-white dark:bg-[#1A1A1A] rounded-xl p-5 border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+      <View className="bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-gray-900 dark:text-white font-bold text-lg">Meus Torneios</Text>
           <Ionicons name="trophy-outline" size={20} color={isDark ? '#888' : '#555'} />
         </View>
         {meusTorneios.length > 0 ? (
           meusTorneios.map(t => (
-            <TouchableOpacity key={t.id} className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-[#2A2A2A]">
+            <TouchableOpacity key={t.id} className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-brand-border-focus">
               <View>
                 <Text className="text-gray-800 dark:text-gray-200 font-semibold text-base">{t.nome}</Text>
                 <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">{t.modalidade}</Text>
@@ -216,26 +247,26 @@ export function ProfileScreen() {
   const renderRefereeDashboard = () => (
     <View className="mx-6 mt-6 space-y-6">
       {/* Partidas Alocadas (Mock) */}
-      <View className="bg-white dark:bg-[#1A1A1A] rounded-xl p-5 border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+      <View className="bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-gray-900 dark:text-white font-bold text-lg">Partidas Alocadas</Text>
-          <Ionicons name="flag-outline" size={20} color={isDark ? '#82A0D8' : '#005BBB'} />
+          <Ionicons name="flag-outline" size={20} color={isDark ? '#3B82F6' : '#2563EB'} />
         </View>
-        <View className="bg-gray-50 dark:bg-[#121212] p-4 rounded-lg border border-gray-200 dark:border-[#2A2A2A]">
+        <View className="bg-[#f2ece0] dark:bg-brand-bg p-4 rounded-lg border border-[#d8ccb4] dark:border-brand-border-focus">
           <Text className="text-gray-800 dark:text-white font-bold text-center mb-2">Final - Dominó em Duplas</Text>
           <View className="flex-row justify-center items-center">
             <Text className="text-gray-600 dark:text-gray-400 font-semibold">Time A</Text>
             <Text className="text-gray-400 mx-3">X</Text>
             <Text className="text-gray-600 dark:text-gray-400 font-semibold">Time B</Text>
           </View>
-          <Text className="text-[#005BBB] dark:text-[#82A0D8] text-xs text-center mt-3 font-bold">HOJE - 19:00</Text>
+          <Text className="text-brand-primary dark:text-brand-electric-light text-xs text-center mt-3 font-bold">HOJE - 19:00</Text>
         </View>
       </View>
     </View>
   );
 
   const renderDashboardByRole = () => {
-    if (loadingData) return <ActivityIndicator size="large" color="#005BBB" className="mt-10" />;
+    if (loadingData) return <ActivityIndicator size="large" color="#2563EB" className="mt-10" />;
     
     switch(user?.tipo_perfil) {
       case 'organizador': return renderOrganizerDashboard();
@@ -247,22 +278,26 @@ export function ProfileScreen() {
   const badgeTheme = getBadgeColors(user?.tipo_perfil || 'atleta');
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-[#121212]">
+    <SafeAreaView className="flex-1 bg-[#f2ece0] dark:bg-brand-bg">
       {/* Header Fixo */}
-      <View className="flex-row items-center justify-between px-6 py-4 border-b border-gray-200 dark:border-[#1A1A1A]">
-        <Ionicons name="menu" size={28} color={isDark ? '#888' : '#555'} />
-        <Text className="text-[#005BBB] dark:text-[#82A0D8] text-xl font-bold tracking-wider">SportConnect</Text>
-        <View style={{ width: 28 }} />
+      <View className="flex-row items-center justify-between px-6 py-4 border-b border-[#d8ccb4] dark:border-brand-border">
+        <View className="flex-row items-center">
+          <Image source={require('../../../assets/logoSport.png')} style={{ width: 32, height: 32, marginRight: 8 }} resizeMode="contain" />
+          <Text className="text-brand-primary dark:text-brand-electric-light text-xl font-bold tracking-wider">SportConnect</Text>
+        </View>
+        <TouchableOpacity onPress={toggleColorScheme} className="p-1 rounded-full bg-[#f2ece0] dark:bg-brand-surface border border-[#d8ccb4] dark:border-brand-border-focus">
+          <Ionicons name={isDark ? "sunny" : "moon"} size={20} color={isDark ? "#F59E0B" : "#2563EB"} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 100 }}>
         
         {/* Info Principal do Usuário */}
-        <View className="mx-6 mt-6 bg-white dark:bg-[#1A1A1A] rounded-xl p-6 border border-gray-200 dark:border-[#2A2A2A] items-center relative shadow-sm">
+        <View className="mx-6 mt-6 bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-6 border border-[#d8ccb4] dark:border-brand-border-focus items-center relative shadow-sm">
           <TouchableOpacity onPress={pickImage} disabled={uploading}>
-            <View className="w-24 h-24 rounded-full bg-gray-100 dark:bg-[#2A2A2A] mb-4 border-4 border-[#005BBB] dark:border-[#82A0D8] overflow-hidden justify-center items-center shadow-md">
+            <View className="w-24 h-24 rounded-full bg-gray-100 dark:bg-brand-border mb-4 border-4 border-brand-primary dark:border-brand-electric-light overflow-hidden justify-center items-center shadow-md">
               {uploading ? (
-                <ActivityIndicator color={isDark ? '#82A0D8' : '#005BBB'} />
+                <ActivityIndicator color={isDark ? '#3B82F6' : '#2563EB'} />
               ) : (
                 <Image source={{ uri: profileImage }} className="w-full h-full" />
               )}
@@ -300,16 +335,16 @@ export function ProfileScreen() {
         {renderDashboardByRole()}
 
         {/* Configurações & Segurança */}
-        <View className="mx-6 mt-6 bg-white dark:bg-[#1A1A1A] rounded-xl p-4 border border-gray-200 dark:border-[#2A2A2A] shadow-sm mb-6">
+        <View className="mx-6 mt-6 bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-4 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm mb-6">
           <Text className="text-gray-400 dark:text-gray-500 text-xs font-bold tracking-widest uppercase mb-2 px-2 mt-2">Segurança & App</Text>
           
           <TouchableOpacity 
-            onPress={() => Alert.alert("Editar Perfil", "Ainda não implementado.")}
-            className="flex-row items-center justify-between px-2 py-4 border-b border-gray-100 dark:border-[#2A2A2A]"
+            onPress={() => setEditModalVisible(true)}
+            className="flex-row items-center justify-between px-2 py-4 border-b border-gray-100 dark:border-brand-border-focus"
           >
             <View className="flex-row items-center">
-              <View className="bg-gray-100 dark:bg-[#2A2A2A] p-2 rounded-full mr-3">
-                <Ionicons name="person-outline" size={20} color={isDark ? "#82A0D8" : "#005BBB"} />
+              <View className="bg-gray-100 dark:bg-brand-border p-2 rounded-full mr-3">
+                <Ionicons name="person-outline" size={20} color={isDark ? "#3B82F6" : "#2563EB"} />
               </View>
               <Text className="text-gray-800 dark:text-white font-semibold text-base">Editar Perfil</Text>
             </View>
@@ -318,28 +353,28 @@ export function ProfileScreen() {
 
           <TouchableOpacity 
             onPress={() => setSenhaModalVisible(true)}
-            className="flex-row items-center justify-between px-2 py-4 border-b border-gray-100 dark:border-[#2A2A2A]"
+            className="flex-row items-center justify-between px-2 py-4 border-b border-gray-100 dark:border-brand-border-focus"
           >
             <View className="flex-row items-center">
-              <View className="bg-gray-100 dark:bg-[#2A2A2A] p-2 rounded-full mr-3">
-                <Ionicons name="lock-closed-outline" size={20} color={isDark ? "#82A0D8" : "#005BBB"} />
+              <View className="bg-gray-100 dark:bg-brand-border p-2 rounded-full mr-3">
+                <Ionicons name="lock-closed-outline" size={20} color={isDark ? "#3B82F6" : "#2563EB"} />
               </View>
               <Text className="text-gray-800 dark:text-white font-semibold text-base">Alterar Senha</Text>
             </View>
             <Ionicons name="chevron-forward" size={20} color={isDark ? "#555" : "#CCC"} />
           </TouchableOpacity>
 
-          <View className="flex-row items-center justify-between px-2 py-4 border-b border-gray-100 dark:border-[#2A2A2A]">
+          <View className="flex-row items-center justify-between px-2 py-4 border-b border-gray-100 dark:border-brand-border-focus">
             <View className="flex-row items-center">
-              <View className="bg-gray-100 dark:bg-[#2A2A2A] p-2 rounded-full mr-3">
-                <Ionicons name="notifications-outline" size={20} color={isDark ? "#82A0D8" : "#005BBB"} />
+              <View className="bg-gray-100 dark:bg-brand-border p-2 rounded-full mr-3">
+                <Ionicons name="notifications-outline" size={20} color={isDark ? "#3B82F6" : "#2563EB"} />
               </View>
               <Text className="text-gray-800 dark:text-white font-semibold text-base">Notificações Push</Text>
             </View>
             <Switch
               value={pushEnabled}
               onValueChange={setPushEnabled}
-              trackColor={{ false: "#D1D5DB", true: "#005BBB" }}
+              trackColor={{ false: "#D1D5DB", true: "#2563EB" }}
               thumbColor="#fff"
             />
           </View>
@@ -365,10 +400,10 @@ export function ProfileScreen() {
         onRequestClose={() => setSenhaModalVisible(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/50 px-6">
-          <View className="bg-white dark:bg-[#1A1A1A] w-full rounded-2xl p-6 border border-gray-200 dark:border-[#2A2A2A] shadow-xl">
+          <View className="bg-[#e6ddca] dark:bg-brand-surface w-full rounded-2xl p-6 border border-[#d8ccb4] dark:border-brand-border-focus shadow-xl">
             <Text className="text-gray-900 dark:text-white text-xl font-bold mb-4">Nova Senha</Text>
             <TextInput
-              className="bg-gray-50 dark:bg-[#121212] text-gray-900 dark:text-white p-4 rounded-xl border border-gray-300 dark:border-[#333] mb-6"
+              className="bg-[#f2ece0] dark:bg-brand-bg text-gray-900 dark:text-white p-4 rounded-xl border border-gray-300 dark:border-brand-border-focus mb-6"
               placeholder="Digite a nova senha..."
               placeholderTextColor="#888"
               secureTextEntry
@@ -384,9 +419,56 @@ export function ProfileScreen() {
               </TouchableOpacity>
               <TouchableOpacity 
                 onPress={handleSalvarSenha}
-                className="bg-[#005BBB] dark:bg-[#82A0D8] px-5 py-3 rounded-lg"
+                className="bg-brand-primary dark:bg-brand-electric-light px-5 py-3 rounded-lg"
               >
-                <Text className="text-white dark:text-[#121212] font-bold">Salvar</Text>
+                <Text className="text-white dark:text-[#0a0a0a] font-bold">Salvar</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
+      {/* Modal Editar Perfil */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={editModalVisible}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View className="flex-1 justify-center items-center bg-black/50 px-6">
+          <View className="bg-[#e6ddca] dark:bg-brand-surface w-full rounded-2xl p-6 border border-[#d8ccb4] dark:border-brand-border-focus shadow-xl">
+            <Text className="text-gray-900 dark:text-white text-xl font-bold mb-4">Editar Perfil</Text>
+            
+            <Text className="text-gray-500 dark:text-gray-400 font-bold text-xs uppercase mb-1">Nome Completo</Text>
+            <TextInput
+              className="bg-[#f2ece0] dark:bg-brand-bg text-gray-900 dark:text-white p-4 rounded-xl border border-gray-300 dark:border-brand-border-focus mb-4"
+              placeholder="Seu nome..."
+              placeholderTextColor="#888"
+              value={editNome}
+              onChangeText={setEditNome}
+            />
+
+            <Text className="text-gray-500 dark:text-gray-400 font-bold text-xs uppercase mb-1">Esporte Principal</Text>
+            <TextInput
+              className="bg-[#f2ece0] dark:bg-brand-bg text-gray-900 dark:text-white p-4 rounded-xl border border-gray-300 dark:border-brand-border-focus mb-6"
+              placeholder="Ex: Dominó"
+              placeholderTextColor="#888"
+              value={editModalidade}
+              onChangeText={setEditModalidade}
+            />
+
+            <View className="flex-row justify-end space-x-3">
+              <TouchableOpacity 
+                onPress={() => setEditModalVisible(false)}
+                className="px-5 py-3 rounded-lg"
+              >
+                <Text className="text-gray-500 dark:text-gray-400 font-bold">Cancelar</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={handleSalvarPerfil}
+                className="bg-brand-primary dark:bg-brand-electric-light px-5 py-3 rounded-lg"
+              >
+                <Text className="text-white dark:text-[#0a0a0a] font-bold">Salvar</Text>
               </TouchableOpacity>
             </View>
           </View>

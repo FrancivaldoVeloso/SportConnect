@@ -60,9 +60,9 @@ export function TeamRegistrationScreen({ route, navigation }: any) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#121212]">
+    <SafeAreaView className="flex-1 bg-[#0a0a0a]">
       {/* Header Fixo */}
-      <View className="flex-row items-center px-6 py-4 border-b border-[#1A1A1A]">
+      <View className="flex-row items-center px-6 py-4 border-b border-[#1c1c1c]">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
           <Ionicons name="arrow-back" size={24} color="#888" />
         </TouchableOpacity>
@@ -70,12 +70,12 @@ export function TeamRegistrationScreen({ route, navigation }: any) {
       </View>
 
       <ScrollView className="flex-1 p-6">
-        <View className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] p-6 mb-6">
-          <Text className="text-[#82A0D8] font-bold text-sm mb-4 uppercase tracking-wider">Dados do Time</Text>
+        <View className="bg-[#1c1c1c] rounded-xl border border-[#262626] p-6 mb-6">
+          <Text className="text-brand-electric-light font-bold text-sm mb-4 uppercase tracking-wider">Dados do Time</Text>
           
           <View className="mb-4">
             <Text className="text-gray-400 mb-2 font-semibold">Nome da Equipe</Text>
-            <View className="bg-[#121212] rounded-lg border border-[#333] px-4 py-3">
+            <View className="bg-[#0a0a0a] rounded-lg border border-[#333] px-4 py-3">
               <TextInput
                 placeholder="Ex: L.A. Strikers FC"
                 placeholderTextColor="#666"
@@ -88,7 +88,7 @@ export function TeamRegistrationScreen({ route, navigation }: any) {
 
           <View className="mb-4">
             <Text className="text-gray-400 mb-2 font-semibold">Categoria / Divisão</Text>
-            <View className="bg-[#121212] rounded-lg border border-[#333] px-4 py-3">
+            <View className="bg-[#0a0a0a] rounded-lg border border-[#333] px-4 py-3">
               <TextInput
                 placeholder="Ex: Amador, Profissional, Sub-20"
                 placeholderTextColor="#666"
@@ -106,11 +106,11 @@ export function TeamRegistrationScreen({ route, navigation }: any) {
           className="bg-[#FFD700] rounded-xl py-4 items-center flex-row justify-center"
         >
           {loading ? (
-            <ActivityIndicator color="#121212" />
+            <ActivityIndicator color="#0a0a0a" />
           ) : (
             <>
-              <Text className="text-[#121212] font-black text-lg mr-2">AVANÇAR PARA PAGAMENTO</Text>
-              <Ionicons name="arrow-forward" size={20} color="#121212" />
+              <Text className="text-[#0a0a0a] font-black text-lg mr-2">AVANÇAR PARA PAGAMENTO</Text>
+              <Ionicons name="arrow-forward" size={20} color="#0a0a0a" />
             </>
           )}
         </TouchableOpacity>

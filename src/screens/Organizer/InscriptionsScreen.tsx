@@ -138,23 +138,23 @@ export function InscriptionsScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-[#121212]">
-      <View className="flex-row items-center px-6 py-4 border-b border-gray-200 dark:border-[#1A1A1A]">
-        <Text className="text-[#005BBB] dark:text-[#82A0D8] text-xl font-bold tracking-wider">Gestão de Inscrições</Text>
+    <SafeAreaView className="flex-1 bg-[#f2ece0] dark:bg-brand-bg">
+      <View className="flex-row items-center px-6 py-4 border-b border-[#d8ccb4] dark:border-brand-border">
+        <Text className="text-brand-primary dark:text-brand-electric-light text-xl font-bold tracking-wider">Gestão de Inscrições</Text>
       </View>
 
       <ScrollView className="flex-1 p-4">
         {loading ? (
-          <ActivityIndicator size="large" color="#005BBB" className="mt-10" />
+          <ActivityIndicator size="large" color="#2563EB" className="mt-10" />
         ) : inscriptions.length === 0 ? (
-          <View className="items-center mt-10 bg-white dark:bg-[#1A1A1A] p-6 rounded-xl border border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+          <View className="items-center mt-10 bg-[#e6ddca] dark:bg-brand-surface p-6 rounded-xl border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
             <Ionicons name="checkmark-done-circle-outline" size={48} color="#4ADE80" />
             <Text className="text-gray-900 dark:text-white font-bold text-lg mt-2">Tudo limpo!</Text>
             <Text className="text-gray-500 dark:text-gray-400 mt-2 text-center">Nenhuma inscrição pendente de validação de Pix no momento.</Text>
           </View>
         ) : (
           inscriptions.map((insc) => (
-            <View key={insc.id} className="bg-white dark:bg-[#1A1A1A] rounded-xl border-l-4 border-l-amber-500 p-4 mb-4 border-y border-r border-gray-200 dark:border-[#2A2A2A] shadow-sm">
+            <View key={insc.id} className="bg-[#e6ddca] dark:bg-brand-surface rounded-xl border-l-4 border-l-amber-500 p-4 mb-4 border-y border-r border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
               <View className="flex-row justify-between items-start mb-2">
                 <View className="flex-1">
                   <Text className="text-gray-900 dark:text-white font-black text-xl">{insc.times?.nome}</Text>
@@ -172,9 +172,9 @@ export function InscriptionsScreen() {
 
               <TouchableOpacity 
                 onPress={() => openReceipt(insc.comprovante_pix_url)}
-                className="bg-gray-100 dark:bg-[#2A2A2A] rounded-lg py-3 flex-row justify-center items-center mb-4 border border-gray-200 dark:border-[#333]"
+                className="bg-gray-100 dark:bg-brand-border rounded-lg py-3 flex-row justify-center items-center mb-4 border border-[#d8ccb4] dark:border-brand-border-focus"
               >
-                <Ionicons name="receipt-outline" size={18} color={isDark ? "#82A0D8" : "#005BBB"} />
+                <Ionicons name="receipt-outline" size={18} color={isDark ? "#3B82F6" : "#2563EB"} />
                 <Text className="text-gray-800 dark:text-white font-bold ml-2">Ver Comprovante PIX</Text>
               </TouchableOpacity>
 

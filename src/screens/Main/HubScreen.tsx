@@ -30,7 +30,7 @@ export function HubScreen({ navigation }: any) {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50 dark:bg-[#121212]">
+    <SafeAreaView className="flex-1 bg-[#f2ece0] dark:bg-brand-bg">
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 80 }}>
         
         {/* Header */}
@@ -43,20 +43,20 @@ export function HubScreen({ navigation }: any) {
 
         {/* Chips de Categorias */}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} className="px-6 mb-6">
-          <TouchableOpacity className="bg-[#005BBB] dark:bg-[#82A0D8] px-4 py-2 rounded-full mr-3">
-            <Text className="text-white dark:text-[#121212] font-bold">Todos os Esportes</Text>
+          <TouchableOpacity className="bg-brand-primary dark:bg-brand-electric-light px-4 py-2 rounded-full mr-3">
+            <Text className="text-white dark:text-[#0a0a0a] font-bold">Todos os Esportes</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="bg-white dark:bg-[#2A2A2A] border border-gray-200 dark:border-transparent px-4 py-2 rounded-full mr-3 shadow-sm">
+          <TouchableOpacity className="bg-[#e6ddca] dark:bg-brand-border border border-[#d8ccb4] dark:border-transparent px-4 py-2 rounded-full mr-3 shadow-sm">
             <Text className="text-gray-600 dark:text-gray-300 font-semibold">Futebol</Text>
           </TouchableOpacity>
-          <TouchableOpacity className="bg-white dark:bg-[#2A2A2A] border border-gray-200 dark:border-transparent px-4 py-2 rounded-full mr-6 shadow-sm">
+          <TouchableOpacity className="bg-[#e6ddca] dark:bg-brand-border border border-[#d8ccb4] dark:border-transparent px-4 py-2 rounded-full mr-6 shadow-sm">
             <Text className="text-gray-600 dark:text-gray-300 font-semibold">Basquete</Text>
           </TouchableOpacity>
         </ScrollView>
 
         {/* Filtros */}
         <View className="px-6 mb-8 space-y-3">
-          <View className="flex-row items-center bg-white dark:bg-[#1A1A1A] rounded-lg px-4 py-3 border border-gray-200 dark:border-[#2A2A2A] mb-3 shadow-sm">
+          <View className="flex-row items-center bg-[#e6ddca] dark:bg-brand-surface rounded-lg px-4 py-3 border border-[#d8ccb4] dark:border-brand-border-focus mb-3 shadow-sm">
             <Ionicons name="location-outline" size={20} color="#888" className="mr-3" />
             <TextInput 
               placeholder="Localização" 
@@ -68,7 +68,7 @@ export function HubScreen({ navigation }: any) {
 
         {/* Lista de Torneios */}
         {loading ? (
-          <ActivityIndicator size="large" color="#005BBB" className="mt-10" />
+          <ActivityIndicator size="large" color="#2563EB" className="mt-10" />
         ) : torneios.length === 0 ? (
           <View className="items-center mt-10">
             <Ionicons name="sad-outline" size={48} color="#888" />
@@ -76,13 +76,13 @@ export function HubScreen({ navigation }: any) {
           </View>
         ) : (
           torneios.map((torneio) => (
-            <View key={torneio.id} className="mx-6 bg-white dark:bg-[#1A1A1A] rounded-xl overflow-hidden border border-gray-200 dark:border-[#2A2A2A] mb-6 shadow-sm">
+            <View key={torneio.id} className="mx-6 bg-[#e6ddca] dark:bg-brand-surface rounded-xl overflow-hidden border border-[#d8ccb4] dark:border-brand-border-focus mb-6 shadow-sm">
               <View className="h-40 bg-gray-200 dark:bg-gray-800 relative">
                 <Image 
                   source={{ uri: 'https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=600&auto=format&fit=crop' }} 
                   className="w-full h-full opacity-80" 
                 />
-                <View className="absolute top-3 left-3 bg-black/70 dark:bg-[#2A2A2A] px-3 py-1 rounded-full">
+                <View className="absolute top-3 left-3 bg-black/70 dark:bg-brand-border px-3 py-1 rounded-full">
                   <Text className="text-white text-xs font-bold uppercase">{torneio.modalidade}</Text>
                 </View>
               </View>
@@ -93,10 +93,10 @@ export function HubScreen({ navigation }: any) {
                   <Text className="text-gray-500 dark:text-gray-400 text-xs font-semibold ml-1">{torneio.local}</Text>
                 </View>
                 
-                <View className="flex-row justify-between bg-gray-50 dark:bg-[#121212] p-3 rounded-lg border border-gray-200 dark:border-[#2A2A2A] mb-5">
+                <View className="flex-row justify-between bg-[#f2ece0] dark:bg-brand-bg p-3 rounded-lg border border-[#d8ccb4] dark:border-brand-border-focus mb-5">
                   <View>
                     <Text className="text-gray-500 text-[10px] mb-1 font-bold">VALOR INSCRIÇÃO</Text>
-                    <Text className="text-[#005BBB] dark:text-[#FFD700] font-bold text-lg">R$ {torneio.valor_inscricao}</Text>
+                    <Text className="text-brand-primary dark:text-[#FFD700] font-bold text-lg">R$ {torneio.valor_inscricao}</Text>
                   </View>
                   <View className="items-end">
                     <Text className="text-gray-500 text-[10px] mb-1 font-bold">VAGAS TOTAIS</Text>
@@ -107,14 +107,14 @@ export function HubScreen({ navigation }: any) {
                 <View className="flex-row justify-between">
                   <TouchableOpacity 
                     onPress={() => navigation.navigate('TeamRegistration', { torneioId: torneio.id })}
-                    className="flex-1 bg-white dark:bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg py-3 items-center mr-2">
+                    className="flex-1 bg-[#e6ddca] dark:bg-transparent border border-gray-300 dark:border-gray-600 rounded-lg py-3 items-center mr-2">
                     <Text className="text-gray-700 dark:text-white font-bold text-xs">Inscrever Equipe</Text>
                   </TouchableOpacity>
                   
                   <TouchableOpacity 
                     onPress={() => navigation.navigate('Bracket', { torneioId: torneio.id })}
-                    className="flex-1 bg-[#005BBB] dark:bg-[#82A0D8] rounded-lg py-3 items-center ml-2">
-                    <Text className="text-white dark:text-[#121212] font-bold text-xs">Ver Chaves</Text>
+                    className="flex-1 bg-brand-primary dark:bg-brand-electric-light rounded-lg py-3 items-center ml-2">
+                    <Text className="text-white dark:text-[#0a0a0a] font-bold text-xs">Ver Chaves</Text>
                   </TouchableOpacity>
                 </View>
               </View>

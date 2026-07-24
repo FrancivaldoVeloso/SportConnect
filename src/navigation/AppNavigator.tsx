@@ -8,7 +8,7 @@ import { LoginScreen } from '../screens/Auth/LoginScreen';
 import { RegisterScreen } from '../screens/Auth/RegisterScreen';
 import { DashboardScreen } from '../screens/Organizer/DashboardScreen';
 import { InscriptionsScreen } from '../screens/Organizer/InscriptionsScreen';
-import { BracketManagerScreen } from '../screens/Organizer/BracketManagerScreen';
+import { TournamentManagerScreen } from '../screens/Organizer/TournamentManagerScreen';
 import { EditTournamentScreen } from '../screens/Organizer/EditTournamentScreen';
 import { HomeScreen } from '../screens/Athlete/HomeScreen';
 
@@ -64,11 +64,7 @@ function OrganizerTabs() {
         component={InscriptionsScreen} 
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="documents" size={size} color={color} /> }}
       />
-      <Tab.Screen 
-        name="Chaves" 
-        component={BracketManagerScreen} 
-        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="git-network" size={size} color={color} /> }}
-      />
+
       <Tab.Screen 
         name="Perfil" 
         component={ProfileScreen} 
@@ -141,6 +137,7 @@ export function AppNavigator() {
             <Stack.Screen name="OrganizerApp" component={OrganizerTabs} />
             <Stack.Screen name="CreateTournament" component={CreateTournamentScreen} />
             <Stack.Screen name="EditTournament" component={EditTournamentScreen} />
+            <Stack.Screen name="TournamentManager" component={TournamentManagerScreen} />
           </>
         ) : (
           <>

@@ -26,7 +26,7 @@ export function Button({ title, variant = 'primary', isLoading, className = '', 
       {...props}
     >
       {isLoading ? (
-        <ActivityIndicator color={variant === 'outline' ? '#005BBB' : '#FFFFFF'} />
+        <ActivityIndicator color={variant === 'outline' ? '#2563EB' : '#FFFFFF'} />
       ) : (
         <Text className={`font-semibold text-lg ${textClass}`}>{title}</Text>
       )}

@@ -7,7 +7,8 @@ import { supabase } from '../../services/supabase';
 
 // Helper for default images
 const getDefaultImage = (modalidade: string) => {
-  switch (modalidade) {
+  const mod = (modalidade || '').trim();
+  switch (mod) {
     case 'Futebol': return require('../../../img/futebol-padrão.jpg');
     case 'Vôlei': return require('../../../img/volei-padrão.jpg');
     case 'Futsal': return require('../../../img/futsal-padrão.webp');
@@ -71,12 +72,12 @@ export function HomeScreen() {
               ) : null}
 
               <View className="flex-row items-center mb-4 space-x-2">
-                <View className="bg-[#2A2A2A] px-2 py-1 rounded mr-2">
+                <View className="bg-[#262626] px-2 py-1 rounded mr-2">
                   <Text className="text-[#FFD700] text-xs font-bold uppercase">{torneio.modalidade}</Text>
                 </View>
                 {torneio.categoria_genero ? (
-                  <View className="bg-[#2A2A2A] px-2 py-1 rounded">
-                    <Text className="text-[#82A0D8] text-xs font-bold uppercase">{torneio.categoria_genero}</Text>
+                  <View className="bg-[#262626] px-2 py-1 rounded">
+                    <Text className="text-brand-electric-light text-xs font-bold uppercase">{torneio.categoria_genero}</Text>
                   </View>
                 ) : null}
               </View>

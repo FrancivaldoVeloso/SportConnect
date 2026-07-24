@@ -84,16 +84,16 @@ export function PaymentScreen({ route, navigation }: any) {
 
   if (fetching) {
     return (
-      <SafeAreaView className="flex-1 bg-[#121212] justify-center items-center">
+      <SafeAreaView className="flex-1 bg-[#0a0a0a] justify-center items-center">
         <ActivityIndicator size="large" color="#FFD700" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#121212]">
+    <SafeAreaView className="flex-1 bg-[#0a0a0a]">
       {/* Header Fixo */}
-      <View className="flex-row items-center px-6 py-4 border-b border-[#1A1A1A]">
+      <View className="flex-row items-center px-6 py-4 border-b border-[#1c1c1c]">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
           <Ionicons name="arrow-back" size={24} color="#888" />
         </TouchableOpacity>
@@ -103,7 +103,7 @@ export function PaymentScreen({ route, navigation }: any) {
       <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 60 }}>
         
         {/* Resumo Financeiro */}
-        <View className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] p-6 items-center mb-6">
+        <View className="bg-[#1c1c1c] rounded-xl border border-[#262626] p-6 items-center mb-6">
           <Text className="text-gray-400 font-semibold mb-2">Valor da Inscrição</Text>
           <Text className="text-[#FFD700] text-4xl font-black mb-1">
             R$ {torneio?.valor_inscricao || '0.00'}
@@ -112,13 +112,13 @@ export function PaymentScreen({ route, navigation }: any) {
         </View>
 
         {/* QR Code Section */}
-        <View className="bg-[#1A1A1A] rounded-xl border border-[#2A2A2A] p-6 items-center mb-6">
-          <Text className="text-[#82A0D8] font-bold text-sm mb-4 uppercase tracking-wider">Escaneie o QR Code Pix</Text>
-          <View className="w-48 h-48 bg-white p-2 rounded-lg mb-4 justify-center items-center">
+        <View className="bg-[#1c1c1c] rounded-xl border border-[#262626] p-6 items-center mb-6">
+          <Text className="text-brand-electric-light font-bold text-sm mb-4 uppercase tracking-wider">Escaneie o QR Code Pix</Text>
+          <View className="w-48 h-48 bg-[#e6ddca] p-2 rounded-lg mb-4 justify-center items-center">
             {/* Simulando um QR Code Genérico */}
             <Ionicons name="qr-code-outline" size={160} color="#000" />
           </View>
-          <TouchableOpacity className="flex-row items-center bg-[#2A2A2A] px-4 py-2 rounded-full border border-[#333]">
+          <TouchableOpacity className="flex-row items-center bg-[#262626] px-4 py-2 rounded-full border border-[#333]">
             <Ionicons name="copy-outline" size={16} color="#888" className="mr-2" />
             <Text className="text-gray-300 font-semibold text-xs">Copiar Chave Pix</Text>
           </TouchableOpacity>
@@ -128,7 +128,7 @@ export function PaymentScreen({ route, navigation }: any) {
         <Text className="text-white text-lg font-bold mb-3">Comprovante</Text>
         <TouchableOpacity 
           onPress={pickImage}
-          className={`border-2 border-dashed ${comprovanteUri ? 'border-[#4ADE80] bg-[#1A2E1A]' : 'border-[#333] bg-[#1A1A1A]'} rounded-xl p-6 items-center justify-center mb-8 h-40`}
+          className={`border-2 border-dashed ${comprovanteUri ? 'border-[#4ADE80] bg-[#1A2E1A]' : 'border-[#333] bg-[#1c1c1c]'} rounded-xl p-6 items-center justify-center mb-8 h-40`}
         >
           {comprovanteUri ? (
             <>
@@ -151,11 +151,11 @@ export function PaymentScreen({ route, navigation }: any) {
           className={`${!comprovanteUri ? 'bg-[#333]' : 'bg-[#FFD700]'} rounded-xl py-4 items-center flex-row justify-center mb-10`}
         >
           {loading ? (
-            <ActivityIndicator color="#121212" />
+            <ActivityIndicator color="#0a0a0a" />
           ) : (
             <>
-              <Ionicons name="checkmark-done" size={24} color={!comprovanteUri ? '#666' : '#121212'} className="mr-2" />
-              <Text className={`${!comprovanteUri ? 'text-[#666]' : 'text-[#121212]'} font-black text-lg`}>FINALIZAR INSCRIÇÃO</Text>
+              <Ionicons name="checkmark-done" size={24} color={!comprovanteUri ? '#666' : '#0a0a0a'} className="mr-2" />
+              <Text className={`${!comprovanteUri ? 'text-[#666]' : 'text-[#0a0a0a]'} font-black text-lg`}>FINALIZAR INSCRIÇÃO</Text>
             </>
           )}
         </TouchableOpacity>
