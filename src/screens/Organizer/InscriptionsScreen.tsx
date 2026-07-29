@@ -6,7 +6,7 @@ import { useColorScheme } from 'nativewind';
 import { supabase } from '../../services/supabase';
 import { AuthContext } from '../../contexts/AuthContext';
 
-export function InscriptionsScreen() {
+export function InscriptionsScreen({ navigation }: any) {
   const { user } = useContext(AuthContext);
   const { colorScheme } = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -140,6 +140,11 @@ export function InscriptionsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-[#f2ece0] dark:bg-brand-bg">
       <View className="flex-row items-center px-6 py-4 border-b border-[#d8ccb4] dark:border-brand-border">
+        {navigation?.canGoBack() && (
+          <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
+            <Ionicons name="arrow-back" size={24} color={isDark ? '#fff' : '#000'} />
+          </TouchableOpacity>
+        )}
         <Text className="text-brand-primary dark:text-brand-electric-light text-xl font-bold tracking-wider">Gestão de Inscrições</Text>
       </View>
 

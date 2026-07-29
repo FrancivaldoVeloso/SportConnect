@@ -146,6 +146,7 @@ export function AppNavigator() {
             <Stack.Screen name="Payment" component={PaymentScreen} />
             <Stack.Screen name="Bracket" component={BracketScreen} />
             <Stack.Screen name="AthleteTournamentDetails" component={AthleteTournamentDetailsScreen} />
+            <Stack.Screen name="ManageInscriptions" component={InscriptionsScreen} />
           </>
         )}
       </Stack.Navigator>

@@ -157,13 +157,22 @@ export function AthleteTournamentDetailsScreen({ route, navigation }: any) {
         {/* Botão de Ação */}
         <View className="px-6 mt-6 mb-6">
           {isOrganizer ? (
-            <TouchableOpacity 
-              onPress={() => navigation.navigate('TournamentManager', { torneio })}
-              className="bg-green-600 dark:bg-green-700 py-4 rounded-xl items-center shadow-md flex-row justify-center"
-            >
-              <Ionicons name="settings" size={20} color="#fff" className="mr-2" />
-              <Text className="text-white font-bold text-lg">Gerenciar Torneio</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('TournamentManager', { torneio })}
+                className="bg-green-600 dark:bg-green-700 py-4 rounded-xl items-center shadow-md flex-row justify-center"
+              >
+                <Ionicons name="settings" size={20} color="#fff" className="mr-2" />
+                <Text className="text-white font-bold text-lg">Gerenciar Torneio</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                onPress={() => navigation.navigate('ManageInscriptions')}
+                className="bg-amber-500 py-4 rounded-xl items-center shadow-md flex-row justify-center mt-3"
+              >
+                <Ionicons name="document-text" size={20} color="#fff" className="mr-2" />
+                <Text className="text-white font-bold text-lg">Aprovar Inscrições</Text>
+              </TouchableOpacity>
+            </>
           ) : jaInscrito ? (
             <View className="bg-gray-400 dark:bg-gray-700 py-4 rounded-xl items-center shadow-md flex-row justify-center">
               <Ionicons name="checkmark-circle" size={20} color="#fff" className="mr-2" />
