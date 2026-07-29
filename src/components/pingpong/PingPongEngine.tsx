@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Modal, Share, useColorScheme } from 'react-native';
+import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet, Modal, Share, useColorScheme, Linking } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
@@ -180,7 +180,6 @@ export function PingPongEngine({ torneio }: { torneio: any }) {
     ]);
   };
 
-  import { Linking } from 'react-native';
   const verComprovante = (url?: string) => {
     if (!url) {
       Alert.alert("Aviso", "Comprovante não enviado.");
