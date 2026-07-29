@@ -17,7 +17,6 @@ import { ProfileScreen } from '../screens/Athlete/ProfileScreen';
 import { TeamRegistrationScreen } from '../screens/Athlete/TeamRegistrationScreen';
 import { PaymentScreen } from '../screens/Athlete/PaymentScreen';
 import { BracketScreen } from '../screens/Athlete/BracketScreen';
-import { RankingScreen } from '../screens/Athlete/RankingScreen';
 import { CourtReservationScreen } from '../screens/Athlete/CourtReservationScreen';
 import { AthleteTournamentsScreen } from '../screens/Athlete/AthleteTournamentsScreen';
 import { CreateTournamentScreen } from '../screens/Organizer/CreateTournamentScreen';
@@ -102,11 +101,6 @@ function AthleteTabs() {
         name="Meus Torneios" 
         component={AthleteTournamentsScreen}
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="trophy" size={size} color={color} /> }}
-      />
-      <Tab.Screen 
-        name="Ranking" 
-        component={RankingScreen}
-        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="podium" size={size} color={color} /> }}
       />
       <Tab.Screen 
         name="Quadras" 
