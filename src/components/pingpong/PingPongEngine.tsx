@@ -4,7 +4,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import type { PartidaVolei as PartidaPingPong, JogoChaveamento } from './PingPongTypes';
 import { computarPonto, subtrairPonto, encerrarPartidaManualmente } from './motorPingPong';
 import { supabase } from '../../services/supabase';
@@ -58,6 +58,10 @@ export function PingPongEngine({ torneio }: { torneio: any }) {
       if (error) throw error;
       if (data) {
         setInscricoes(data as any[]);
+        
+        // Auto-adicionar todos os aprovados para a área de sorteio para agilizar
+        const timesAprovados = (data as any[]).filter(i => i.status === 'aprovado').map(i => (Array.isArray(i.times) ? i.times[0] : i.times) as TimeDB);
+        setTimesSelecionados(timesAprovados);
       }
     } catch (err) {
       console.error("Erro ao carregar inscritos:", err);
@@ -708,41 +712,30 @@ export function PingPongEngine({ torneio }: { torneio: any }) {
               </View>
 
               <View className="p-4 bg-[#f2ece0] dark:bg-brand-bg">
-                {inscricoes.length === 0 ? (
+                {inscricoes.filter(i => i.status === 'pendente').length === 0 ? (
                   <View className="py-8 items-center justify-center">
                     <Ionicons name="folder-open-outline" size={48} color="#9CA3AF" />
-                    <Text className="text-gray-500 font-medium mt-3">Nenhuma inscrição registrada.</Text>
+                    <Text className="text-gray-500 font-medium mt-3">Nenhuma inscrição aguardando aprovação.</Text>
                   </View>
                 ) : (
-                  inscricoes.map(insc => (
-                    <View key={insc.id} className={`flex-row items-center justify-between p-4 mb-3 rounded-xl border ${insc.status === 'pendente' ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30 border-l-4 border-l-amber-500' : 'bg-white dark:bg-[#1c1c1c] border-gray-200 dark:border-brand-border border-l-4 border-l-green-500'} shadow-sm`}>
-                      <View className="flex-1">
-                        <View className="flex-row items-center mb-1">
-                          <Text className="text-gray-900 dark:text-white font-bold text-lg mr-2">{insc.times?.nome}</Text>
-                          {insc.status === 'pendente' ? (
-                            <View className="bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded text-[10px]"><Text className="text-amber-700 dark:text-amber-500 font-bold text-[10px] uppercase">Pendente</Text></View>
-                          ) : (
-                            <View className="bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded text-[10px]"><Text className="text-green-700 dark:text-green-500 font-bold text-[10px] uppercase">Aprovado</Text></View>
-                          )}
-                        </View>
+                  inscricoes.filter(i => i.status === 'pendente').map(insc => (
+                    <View key={insc.id} className="flex-row items-center justify-between p-4 mb-3 rounded-xl border bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30 border-l-4 border-l-amber-500 shadow-sm">
+                      <View className="flex-1 pr-2">
+                        <Text className="text-gray-900 dark:text-white font-bold text-lg" numberOfLines={1}>{insc.times?.nome}</Text>
                         
-                        <TouchableOpacity onPress={() => verComprovante(insc.comprovante_pix_url)} className="flex-row items-center mt-1">
-                          <Ionicons name="receipt" size={14} color={isDark ? "#3B82F6" : "#2563EB"} />
-                          <Text className="text-brand-primary dark:text-brand-electric-light text-xs font-semibold ml-1">Ver Comprovante</Text>
-                        </TouchableOpacity>
+                        <View className="flex-row items-center mt-2 space-x-3">
+                          <View className="bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded"><Text className="text-amber-700 dark:text-amber-500 font-bold text-[10px] uppercase">Pendente</Text></View>
+                          <TouchableOpacity onPress={() => verComprovante(insc.comprovante_pix_url)} className="flex-row items-center">
+                            <Ionicons name="receipt" size={14} color={isDark ? "#3B82F6" : "#2563EB"} />
+                            <Text className="text-brand-primary dark:text-brand-electric-light text-xs font-semibold ml-1">Comprovante</Text>
+                          </TouchableOpacity>
+                        </View>
                       </View>
 
-                      <View className="flex-row items-center ml-2 space-x-2">
-                        {insc.status === 'pendente' && (
-                          <TouchableOpacity onPress={() => aprovarInscricao(insc)} className="bg-green-500 w-10 h-10 rounded-full items-center justify-center shadow-sm">
-                            <Ionicons name="checkmark" size={20} color="#fff" />
-                          </TouchableOpacity>
-                        )}
-                        {insc.status === 'aprovado' && (
-                          <TouchableOpacity onPress={() => adicionarTime(insc.times)} className="bg-brand-primary dark:bg-brand-electric-light w-10 h-10 rounded-full items-center justify-center shadow-sm" disabled={!!timesSelecionados.find(t => t.id === insc.times?.id)}>
-                            <Ionicons name="add" size={20} color={isDark ? "#0a0a0a" : "#fff"} />
-                          </TouchableOpacity>
-                        )}
+                      <View className="flex-row items-center space-x-2">
+                        <TouchableOpacity onPress={() => aprovarInscricao(insc)} className="bg-green-500 w-10 h-10 rounded-full items-center justify-center shadow-sm">
+                          <Ionicons name="checkmark" size={20} color="#fff" />
+                        </TouchableOpacity>
                         <TouchableOpacity onPress={() => rejeitarInscricao(insc)} className="bg-red-100 dark:bg-red-900/30 w-10 h-10 rounded-full items-center justify-center border border-red-200 dark:border-red-900/50">
                           <Ionicons name="trash" size={18} color="#EF4444" />
                         </TouchableOpacity>
@@ -802,29 +795,89 @@ export function PingPongEngine({ torneio }: { torneio: any }) {
               </TouchableOpacity>
             </View>
 
-            {/* Lista de Chaves */}
-            <View className="flex-row flex-wrap justify-between">
-              {chaves.map((jogo) => (
-                <TouchableOpacity 
-                  key={jogo.id}
-                  onPress={() => carregarJogoNoPlacar(jogo)}
-                  className={`w-[48%] mb-4 p-3 rounded-xl border ${idJogoSelecionado === jogo.id ? 'border-brand-primary dark:border-brand-electric-light border-2' : 'border-[#d8ccb4] dark:border-brand-border-focus'} bg-[#e6ddca] dark:bg-brand-surface`}
-                >
-                  <View className="flex-row justify-between mb-2">
-                    <Text className="text-[10px] text-gray-500 uppercase font-bold">{jogo.fase}</Text>
-                    {jogo.concluido && <Text className="text-[10px] text-green-500 font-bold">Concluído</Text>}
-                  </View>
-                  <View className="flex-row justify-between">
-                    <Text className={`text-xs ${jogo.vencedor === jogo.timeA ? 'text-green-600 dark:text-green-400 font-bold' : 'text-gray-800 dark:text-gray-200'}`} numberOfLines={1} style={{ flex: 1 }}>{jogo.timeA}</Text>
-                    <Text className="text-xs font-bold text-gray-800 dark:text-white ml-2">{jogo.setsA}</Text>
-                  </View>
-                  <View className="flex-row justify-between mt-1">
-                    <Text className={`text-xs ${jogo.vencedor === jogo.timeB ? 'text-green-600 dark:text-green-400 font-bold' : 'text-gray-800 dark:text-gray-200'}`} numberOfLines={1} style={{ flex: 1 }}>{jogo.timeB}</Text>
-                    <Text className="text-xs font-bold text-gray-800 dark:text-white ml-2">{jogo.setsB}</Text>
-                  </View>
-                </TouchableOpacity>
-              ))}
-            </View>
+            {/* Lista de Chaves (Bracket Tree Horizontal Profissional) */}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} className="py-2 mb-6">
+              <View className="flex-row items-stretch min-w-full px-2">
+                {Array.from(new Set(chaves.map(c => c.fase))).map((faseName, idx, arr) => {
+                  const jogosDaFase = chaves.filter(c => c.fase === faseName);
+                  return (
+                    <View key={faseName} className="mr-4 flex-col min-h-[400px]">
+                      <Text className="text-center text-gray-800 dark:text-white font-bold mb-6 uppercase tracking-widest bg-[#d8ccb4] dark:bg-brand-border-focus py-2 rounded-lg w-64">{faseName}</Text>
+                      
+                      <View className="flex-col flex-1">
+                        {Array.from({ length: Math.ceil(jogosDaFase.length / 2) }).map((_, pairIdx) => {
+                          const jogo1 = jogosDaFase[pairIdx * 2];
+                          const jogo2 = jogosDaFase[pairIdx * 2 + 1];
+                          
+                          return (
+                            <View key={pairIdx} className="flex-row items-center flex-1 my-2">
+                              {/* Coluna dos Cards */}
+                              <View className="flex-col justify-around flex-1 w-64">
+                                {jogo1 && (
+                                  <TouchableOpacity 
+                                    onPress={() => carregarJogoNoPlacar(jogo1)}
+                                    className={`p-3 rounded-xl border ${idJogoSelecionado === jogo1.id ? 'border-brand-primary dark:border-brand-electric-light border-2 bg-brand-primary/10 dark:bg-brand-electric-light/10' : 'border-[#d8ccb4] dark:border-brand-border-focus bg-[#e6ddca] dark:bg-brand-surface'} shadow-sm my-1 z-10`}
+                                  >
+                                    <View className="flex-row justify-between mb-2">
+                                      <Text className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold">{jogo1.fase}</Text>
+                                      {jogo1.concluido && <View className="bg-green-100 dark:bg-green-900/40 px-2 rounded"><Text className="text-[10px] text-green-600 dark:text-green-400 font-bold uppercase">Concluído</Text></View>}
+                                    </View>
+                                    <View className="flex-row justify-between border-b border-black/10 dark:border-white/10 pb-1 mb-1">
+                                      <Text className={`text-xs ${jogo1.vencedor === jogo1.timeA ? 'text-brand-primary dark:text-brand-electric-light font-black' : 'text-gray-800 dark:text-gray-200 font-semibold'}`} numberOfLines={1} style={{ flex: 1 }}>{jogo1.timeA}</Text>
+                                      <Text className={`text-xs font-black ml-2 ${jogo1.vencedor === jogo1.timeA ? 'text-brand-primary dark:text-brand-electric-light' : 'text-gray-800 dark:text-white'}`}>{jogo1.setsA}</Text>
+                                    </View>
+                                    <View className="flex-row justify-between">
+                                      <Text className={`text-xs ${jogo1.vencedor === jogo1.timeB ? 'text-brand-primary dark:text-brand-electric-light font-black' : 'text-gray-800 dark:text-gray-200 font-semibold'}`} numberOfLines={1} style={{ flex: 1 }}>{jogo1.timeB}</Text>
+                                      <Text className={`text-xs font-black ml-2 ${jogo1.vencedor === jogo1.timeB ? 'text-brand-primary dark:text-brand-electric-light' : 'text-gray-800 dark:text-white'}`}>{jogo1.setsB}</Text>
+                                    </View>
+                                  </TouchableOpacity>
+                                )}
+                                
+                                {jogo2 && (
+                                  <TouchableOpacity 
+                                    onPress={() => carregarJogoNoPlacar(jogo2)}
+                                    className={`p-3 rounded-xl border ${idJogoSelecionado === jogo2.id ? 'border-brand-primary dark:border-brand-electric-light border-2 bg-brand-primary/10 dark:bg-brand-electric-light/10' : 'border-[#d8ccb4] dark:border-brand-border-focus bg-[#e6ddca] dark:bg-brand-surface'} shadow-sm my-1 z-10`}
+                                  >
+                                    <View className="flex-row justify-between mb-2">
+                                      <Text className="text-[10px] text-gray-500 dark:text-gray-400 uppercase font-bold">{jogo2.fase}</Text>
+                                      {jogo2.concluido && <View className="bg-green-100 dark:bg-green-900/40 px-2 rounded"><Text className="text-[10px] text-green-600 dark:text-green-400 font-bold uppercase">Concluído</Text></View>}
+                                    </View>
+                                    <View className="flex-row justify-between border-b border-black/10 dark:border-white/10 pb-1 mb-1">
+                                      <Text className={`text-xs ${jogo2.vencedor === jogo2.timeA ? 'text-brand-primary dark:text-brand-electric-light font-black' : 'text-gray-800 dark:text-gray-200 font-semibold'}`} numberOfLines={1} style={{ flex: 1 }}>{jogo2.timeA}</Text>
+                                      <Text className={`text-xs font-black ml-2 ${jogo2.vencedor === jogo2.timeA ? 'text-brand-primary dark:text-brand-electric-light' : 'text-gray-800 dark:text-white'}`}>{jogo2.setsA}</Text>
+                                    </View>
+                                    <View className="flex-row justify-between">
+                                      <Text className={`text-xs ${jogo2.vencedor === jogo2.timeB ? 'text-brand-primary dark:text-brand-electric-light font-black' : 'text-gray-800 dark:text-gray-200 font-semibold'}`} numberOfLines={1} style={{ flex: 1 }}>{jogo2.timeB}</Text>
+                                      <Text className={`text-xs font-black ml-2 ${jogo2.vencedor === jogo2.timeB ? 'text-brand-primary dark:text-brand-electric-light' : 'text-gray-800 dark:text-white'}`}>{jogo2.setsB}</Text>
+                                    </View>
+                                  </TouchableOpacity>
+                                )}
+                              </View>
+                              
+                              {/* Coluna dos Conectores Visuais ┫ */}
+                              {idx < arr.length - 1 && (
+                                <View className="flex-row items-center h-full w-8">
+                                  {jogo2 ? (
+                                    <>
+                                      <View className="w-4 h-[50%] border-r-2 border-y-2 border-[#d8ccb4] dark:border-brand-border-focus rounded-r-lg" />
+                                      <View className="w-4 h-[2px] bg-[#d8ccb4] dark:bg-brand-border-focus" />
+                                    </>
+                                  ) : (
+                                    <>
+                                      <View className="w-8 h-[2px] bg-[#d8ccb4] dark:bg-brand-border-focus" />
+                                    </>
+                                  )}
+                                </View>
+                              )}
+                            </View>
+                          );
+                        })}
+                      </View>
+                    </View>
+                  );
+                })}
+              </View>
+            </ScrollView>
 
             {/* Placar Ativo */}
             {partidaAtiva && !mostrarSumula && (

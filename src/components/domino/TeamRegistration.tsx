@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as DocumentPicker from "expo-document-picker";
-import * as FileSystem from "expo-file-system";
+import * as FileSystem from "expo-file-system/legacy";
 import { Team } from "../../types/domino";
 
 interface TeamRegistrationProps {
@@ -38,16 +38,23 @@ export function TeamRegistration({
   const handleImportCSV = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
-        type: ["text/csv", "application/vnd.ms-excel", "text/comma-separated-values", ".csv", "*/*"],
         copyToCacheDirectory: true,
       });
 
-      if (result.canceled) return;
+      if (result.canceled === true || (result as any).type === 'cancel') return;
 
-      const fileUri = result.assets[0].uri;
-      const fileContent = await FileSystem.readAsStringAsync(fileUri);
+      let fileUri = "";
+      if (result.assets && result.assets.length > 0) {
+        fileUri = result.assets[0].uri;
+      } else if ((result as any).uri) {
+        fileUri = (result as any).uri;
+      } else {
+        throw new Error("Não foi possível encontrar o caminho do arquivo selecionado.");
+      }
       
-      const lines = fileContent.split("\n");
+      const fileContent = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
+      
+      const lines = fileContent.split(/\r?\n/);
       const importedTeams: Team[] = [];
       let importedCount = 0;
 
@@ -55,13 +62,16 @@ export function TeamRegistration({
         const line = lines[i].trim();
         if (!line) continue;
         
-        const columns = line.split(",");
+        // Suporta tanto vírgula quanto ponto e vírgula
+        const separator = line.includes(";") ? ";" : ",";
+        const columns = line.split(separator);
+        
         if (columns.length >= 1) {
-          const teamName = columns[0].trim();
-          const player1 = columns.length > 1 ? columns[1].trim() : "Desconhecido";
-          const player2 = columns.length > 2 ? columns[2].trim() : "Desconhecido";
+          const teamName = columns[0].trim().replace(/['"]/g, '');
+          const player1 = columns.length > 1 ? columns[1].trim().replace(/['"]/g, '') : "Desconhecido";
+          const player2 = columns.length > 2 ? columns[2].trim().replace(/['"]/g, '') : "Desconhecido";
           
-          if (teamName.toLowerCase() === "nome da dupla" || teamName.toLowerCase() === "time") continue;
+          if (teamName.toLowerCase() === "nome da dupla" || teamName.toLowerCase() === "time" || teamName.toLowerCase().includes("nome")) continue;
 
           if (teamName) {
             importedTeams.push({
@@ -80,10 +90,10 @@ export function TeamRegistration({
         onImportTeams(importedTeams);
         Alert.alert("Sucesso", `${importedCount} duplas importadas com sucesso do CSV!`);
       } else {
-        Alert.alert("Aviso", "Nenhuma dupla válida encontrada no arquivo CSV.");
+        Alert.alert("Aviso", "O arquivo foi lido, mas nenhuma dupla válida foi encontrada. Verifique o formato do CSV.");
       }
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível importar o arquivo CSV.");
+    } catch (error: any) {
+      Alert.alert("Erro", `Falha ao importar: ${error?.message || 'Erro desconhecido'}`);
       console.error(error);
     }
   };

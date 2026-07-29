@@ -4,14 +4,17 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Input } from '../../components/Input';
 import { supabase } from '../../services/supabase';
 import { AuthContext } from '../../contexts/AuthContext';
+import { Picker } from '@react-native-picker/picker';
 import DateTimePicker from '@react-native-community/datetimepicker';
+import * as FileSystem from 'expo-file-system/legacy';
+import { decode } from 'base64-arraybuffer';
 import * as ImagePicker from 'expo-image-picker';
 import { Ionicons } from '@expo/vector-icons';
 
 export function CreateTournamentScreen({ navigation }: any) {
   const { user } = React.useContext(AuthContext);
   const [nome, setNome] = useState('');
-  const [modalidade, setModalidade] = useState('Dominó');
+  const [modalidade, setModalidade] = useState('SOLO');
   const [dataInicio, setDataInicio] = useState(new Date());
   const [horaInicio, setHoraInicio] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
@@ -24,9 +27,9 @@ export function CreateTournamentScreen({ navigation }: any) {
   const [categoriaGenero, setCategoriaGenero] = useState('Masculino');
   const [loading, setLoading] = useState(false);
 
-  const MODALIDADES = ['Dominó', 'Futebol', 'Futsal', 'Vôlei', 'Ping Pong'];
+  const MODALIDADES = ['SOLO', 'DUPLA', 'TIME'];
   const CATEGORIAS_GENERO = ['Masculino', 'Feminino', 'Misto'];
-  const requiresGender = ['Vôlei', 'Futsal', 'Futebol'].includes(modalidade);
+  const requiresGender = true;
 
   const pickImage = async () => {
     try {
@@ -65,6 +68,34 @@ export function CreateTournamentScreen({ navigation }: any) {
       return;
     }
 
+    let finalCapaUrl = null;
+
+    if (capaUrl) {
+      try {
+        const base64 = await FileSystem.readAsStringAsync(capaUrl, { encoding: FileSystem.EncodingType.Base64 });
+        const filePath = `torneio_${Date.now()}.jpg`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('capas_torneios')
+          .upload(filePath, decode(base64), {
+            contentType: 'image/jpeg',
+          });
+
+        if (uploadError) {
+          console.error('Erro no upload da capa:', uploadError);
+          Alert.alert('Aviso', 'O torneio será criado, mas houve um erro ao enviar a capa (O bucket capas_torneios existe e é público no Supabase?).');
+        } else {
+          const { data: publicUrlData } = supabase.storage
+            .from('capas_torneios')
+            .getPublicUrl(filePath);
+          
+          finalCapaUrl = publicUrlData.publicUrl;
+        }
+      } catch (err) {
+        console.error('Falha ao processar imagem:', err);
+      }
+    }
+
     const { error } = await supabase.from('torneios').insert({
       organizador_id: user.id,
       nome,
@@ -75,7 +106,7 @@ export function CreateTournamentScreen({ navigation }: any) {
       numero_max_times: parseInt(numeroMaxTimes, 10),
       valor_inscricao: parseFloat(valorInscricao),
       descricao,
-      capa_url: capaUrl,
+      capa_url: finalCapaUrl,
     });
 
     setLoading(false);

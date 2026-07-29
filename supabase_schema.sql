@@ -201,6 +201,16 @@ ALTER TABLE public.times ADD COLUMN IF NOT EXISTS categoria VARCHAR;
 ALTER TABLE public.times ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'CONFIRMED';
 ALTER TABLE public.times ADD COLUMN IF NOT EXISTS player1 VARCHAR;
 ALTER TABLE public.times ADD COLUMN IF NOT EXISTS player2 VARCHAR;
+ALTER TABLE public.times ADD COLUMN IF NOT EXISTS jogadores_extras JSONB DEFAULT '[]'::jsonb;
+
+-- Criar bucket de storage para as capas dos torneios caso não exista
+INSERT INTO storage.buckets (id, name, public) VALUES ('capas_torneios', 'capas_torneios', true) ON CONFLICT (id) DO NOTHING;
+
+-- Garantir que as imagens sejam lidas por qualquer um
+CREATE POLICY "Imagens das capas publicas" ON storage.objects FOR SELECT USING (bucket_id = 'capas_torneios');
+
+-- Permitir que organizadores insiram capas
+CREATE POLICY "Organizadores podem inserir capas" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'capas_torneios' AND auth.role() = 'authenticated');
 
 ALTER TABLE public.inscricoes ADD COLUMN IF NOT EXISTS comprovante_pix_url VARCHAR;
 

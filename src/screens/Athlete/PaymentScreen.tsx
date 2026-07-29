@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TouchableOpacity, ScrollView, Alert, ActivityIndicator, Image } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { supabase } from '../../services/supabase';
 
 export function PaymentScreen({ route, navigation }: any) {
   const { inscricaoId, torneioId } = route.params;
+  const insets = useSafeAreaInsets();
   
   const [torneio, setTorneio] = useState<any>(null);
   const [comprovanteUri, setComprovanteUri] = useState<string | null>(null);
@@ -83,7 +84,7 @@ export function PaymentScreen({ route, navigation }: any) {
       if (error) throw error;
 
       Alert.alert('Sucesso!', 'Sua inscrição foi enviada e está aguardando aprovação do organizador.', [
-        { text: 'OK', onPress: () => navigation.navigate('AthleteTabs', { screen: 'Feed' }) }
+        { text: 'OK', onPress: () => navigation.reset({ index: 0, routes: [{ name: 'AthleteApp' }] }) }
       ]);
 
     } catch (error: any) {
@@ -95,14 +96,14 @@ export function PaymentScreen({ route, navigation }: any) {
 
   if (fetching) {
     return (
-      <SafeAreaView className="flex-1 bg-[#0a0a0a] justify-center items-center">
+      <SafeAreaView edges={['top']} className="flex-1 bg-[#0a0a0a] justify-center items-center">
         <ActivityIndicator size="large" color="#FFD700" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-[#0a0a0a]">
+    <SafeAreaView edges={['top']} className="flex-1 bg-[#0a0a0a]">
       {/* Header Fixo */}
       <View className="flex-row items-center px-6 py-4 border-b border-[#1c1c1c]">
         <TouchableOpacity onPress={() => navigation.goBack()} className="mr-4">
@@ -111,7 +112,7 @@ export function PaymentScreen({ route, navigation }: any) {
         <Text className="text-white text-xl font-bold">Pagamento</Text>
       </View>
 
-      <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: 60 }}>
+      <ScrollView className="flex-1 p-6" contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 60) }}>
         
         {/* Resumo Financeiro */}
         <View className="bg-[#1c1c1c] rounded-xl border border-[#262626] p-6 items-center mb-6">

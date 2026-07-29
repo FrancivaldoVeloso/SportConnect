@@ -4,6 +4,12 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import { Match, Team } from "../../types/domino";
+import Svg, { Path } from 'react-native-svg';
+
+const CARD_WIDTH = 180;
+const CARD_HEIGHT = 70;
+const H_SPACING = 60;
+const V_SPACING = 40;
 
 interface TournamentBracketProps {
   matches: Match[];
@@ -18,158 +24,237 @@ export function TournamentBracket({ matches }: TournamentBracketProps) {
     );
   }
 
-  // Group matches by phase (Round code approximation)
-  // To keep things ordered: 
-  // We can group by phase string and render columns
-  
-  const matchesByPhase = matches.reduce((acc, match) => {
-    if (!acc[match.phase]) {
-      acc[match.phase] = [];
-    }
-    acc[match.phase].push(match);
-    return acc;
-  }, {} as Record<string, Match[]>);
-
-  // Approximate order: Quarter-finals -> Semi-finals -> Final
-  // Better yet, just use the built-in id comparison logic from domino context.
-  const phaseOrder = [
-    "Dezesseis-avos de Final",
-    "Oitavas de Final",
-    "Quartas de Final",
-    "Semifinal",
-    "Final"
-  ];
-  
-  const phases = Object.keys(matchesByPhase).sort((a, b) => {
-    let indexA = phaseOrder.indexOf(a);
-    let indexB = phaseOrder.indexOf(b);
-    if(indexA === -1) indexA = 0;
-    if(indexB === -1) indexB = 0;
-    return indexA - indexB;
-  });
-
   const exportBracketPDF = async () => {
-    try {
-      let html = `
-        <html>
-          <head>
-            <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0, user-scalable=no" />
-            <style>
-              body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 40px; color: #333; }
-              .header { text-align: center; border-bottom: 2px solid #2563EB; padding-bottom: 20px; margin-bottom: 30px; }
-              .title { font-size: 28px; font-weight: bold; color: #1c1c1c; margin: 0; }
-              .bracket-container { display: flex; flex-direction: row; gap: 40px; overflow-x: auto; }
-              .phase-column { width: 250px; display: flex; flex-direction: column; gap: 20px; }
-              .phase-title { background: #2563EB; color: white; padding: 10px; text-align: center; font-weight: bold; border-radius: 8px 8px 0 0; text-transform: uppercase; font-size: 12px; }
-              .match-box { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; background: #fff; }
-              .match-header { background: #f3f4f6; padding: 5px 10px; font-size: 10px; font-weight: bold; color: #6b7280; text-transform: uppercase; display: flex; justify-content: space-between; }
-              .team-row { display: flex; justify-content: space-between; padding: 10px; border-top: 1px solid #e5e7eb; }
-              .winner { font-weight: bold; color: #2563EB; background: #eff6ff; }
-            </style>
-          </head>
-          <body>
-            <div class="header">
-              <h1 class="title">CHAVEAMENTO DO TORNEIO</h1>
-              <p>SportConnect - Tabela de Jogos Oficial</p>
-            </div>
-            <div class="bracket-container">
-      `;
+    Alert.alert('Aviso', 'A exportação em PDF desta versão está sendo reformulada.');
+  };
 
-      phases.forEach(phase => {
-        html += `<div class="phase-column">`;
-        html += `<div class="phase-title">${phase}</div>`;
-        matchesByPhase[phase].forEach(match => {
-          const teamA = match.teamA;
-          const teamB = match.teamB;
-          const isWinnerA = match.winnerId === teamA.id;
-          const isWinnerB = match.winnerId === teamB.id;
-          const nameA = teamA.id.startsWith("placeholder-") || teamA.id === "bye" ? "A Definir" : teamA.name;
-          const nameB = teamB.id.startsWith("placeholder-") || teamB.id === "bye" ? "A Definir" : teamB.name;
+  const calculateBracketLayout = () => {
+    const phaseOrder = [
+      "Dezesseis-avos de Final",
+      "Oitavas de Final",
+      "Quartas de Final",
+      "Semifinal",
+      "Final"
+    ];
+
+    const sortedMatches = [...matches];
+    let startingPhaseIndex = 4;
+    matches.forEach(m => {
+       const idx = phaseOrder.indexOf(m.phase);
+       if (idx !== -1 && idx < startingPhaseIndex) startingPhaseIndex = idx;
+    });
+    
+    const numPhases = 5 - startingPhaseIndex; 
+    const nodes: any[] = [];
+    const lines: any[] = [];
+    const Y_STEP = CARD_HEIGHT + V_SPACING;
+    
+    const buildSide = (side: 'left' | 'right', dbMatches: Match[]) => {
+       const sideNodes: any[][] = [];
+       const matchesCopy = [...dbMatches];
+       
+       for (let p = 0; p < numPhases - 1; p++) {
+          const phaseName = phaseOrder[startingPhaseIndex + p];
+          const matchesInPhase = Math.pow(2, numPhases - 2 - p);
           
-          html += `
-            <div class="match-box">
-              <div class="match-header"><span>Mesa ${match.tableNumber}</span><span>${match.status === 'COMPLETED' ? 'Fim' : match.status === 'LIVE' ? 'Ao Vivo' : ''}</span></div>
-              <div class="team-row ${isWinnerA ? 'winner' : ''}"><span>${nameA}</span><span>${match.scoreA}</span></div>
-              <div class="team-row ${isWinnerB ? 'winner' : ''}"><span>${nameB}</span><span>${match.scoreB}</span></div>
-            </div>
-          `;
-        });
-        html += `</div>`;
-      });
-
-      html += `
-            </div>
-          </body>
-        </html>
-      `;
-
-      const { uri } = await Print.printToFileAsync({ html });
-      await Sharing.shareAsync(uri, { UTI: '.pdf', mimeType: 'application/pdf', dialogTitle: 'Compartilhar Chaveamento' });
-    } catch (error) {
-      Alert.alert("Erro", "Não foi possível gerar o PDF do chaveamento.");
+          const phaseNodes = [];
+          for (let r = 0; r < matchesInPhase; r++) {
+             const matchPhaseList = matchesCopy.filter(m => m.phase === phaseName);
+             const match = matchPhaseList.length > 0 ? matchPhaseList[0] : null;
+             if (match) {
+                const idx = matchesCopy.indexOf(match);
+                matchesCopy.splice(idx, 1);
+             }
+             
+             let x = side === 'left' ? p * (CARD_WIDTH + H_SPACING) : (2 * (numPhases - 1) - p) * (CARD_WIDTH + H_SPACING);
+             let y = 0;
+             
+             if (p === 0) {
+                y = r * Y_STEP;
+             } else {
+                if (sideNodes[p-1] && sideNodes[p-1].length > r*2 + 1) {
+                   const child1 = sideNodes[p-1][r*2];
+                   const child2 = sideNodes[p-1][r*2 + 1];
+                   y = (child1.y + child2.y) / 2;
+                   
+                   const startX1 = side === 'left' ? child1.x + CARD_WIDTH : child1.x;
+                   const startX2 = side === 'left' ? child2.x + CARD_WIDTH : child2.x;
+                   const endX = side === 'left' ? x : x + CARD_WIDTH;
+                   const midX = (startX1 + endX) / 2;
+                   
+                   lines.push({
+                      d: `M ${startX1} ${child1.y + CARD_HEIGHT/2} L ${midX} ${child1.y + CARD_HEIGHT/2} L ${midX} ${y + CARD_HEIGHT/2} L ${endX} ${y + CARD_HEIGHT/2}`,
+                      key: `line_${side}_${p}_${r}_1`
+                   });
+                   lines.push({
+                      d: `M ${startX2} ${child2.y + CARD_HEIGHT/2} L ${midX} ${child2.y + CARD_HEIGHT/2} L ${midX} ${y + CARD_HEIGHT/2} L ${endX} ${y + CARD_HEIGHT/2}`,
+                      key: `line_${side}_${p}_${r}_2`
+                   });
+                } else {
+                   y = r * Y_STEP * Math.pow(2, p);
+                }
+             }
+             
+             const node = { x, y, match, side, phase: phaseName, row: r };
+             phaseNodes.push(node);
+             nodes.push(node);
+          }
+          sideNodes.push(phaseNodes);
+       }
+       return sideNodes;
+    };
+    
+    if (numPhases <= 1) {
+       const finalMatch = sortedMatches.length > 0 ? sortedMatches[0] : null;
+       nodes.push({ x: 0, y: 0, match: finalMatch, side: 'center', phase: 'Final', row: 0 });
+       return { nodes, lines, width: CARD_WIDTH + 40, height: CARD_HEIGHT + 40 };
     }
+    
+    const leftMatches: Match[] = [];
+    const rightMatches: Match[] = [];
+    
+    for (let p = 0; p < numPhases - 1; p++) {
+       const phaseName = phaseOrder[startingPhaseIndex + p];
+       const phaseMatches = sortedMatches.filter(m => m.phase === phaseName);
+       const half = Math.pow(2, numPhases - 2 - p);
+       leftMatches.push(...phaseMatches.slice(0, half));
+       rightMatches.push(...phaseMatches.slice(half));
+    }
+    
+    const leftSideNodes = buildSide('left', leftMatches);
+    const rightSideNodes = buildSide('right', rightMatches);
+    
+    const finalMatches = sortedMatches.filter(m => m.phase === 'Final');
+    const finalMatch = finalMatches.length > 0 ? finalMatches[0] : null;
+    
+    let finalX = (numPhases - 1) * (CARD_WIDTH + H_SPACING);
+    let finalY = 0;
+    
+    if (leftSideNodes.length > 0 && leftSideNodes[numPhases-2].length > 0) {
+       finalY = leftSideNodes[numPhases-2][0].y;
+    }
+    
+    const finalNode = { x: finalX, y: finalY, match: finalMatch, side: 'center', phase: 'Final', row: 0 };
+    nodes.push(finalNode);
+    
+    if (leftSideNodes.length > 0 && rightSideNodes.length > 0 && leftSideNodes[numPhases-2].length > 0 && rightSideNodes[numPhases-2].length > 0) {
+       const lNode = leftSideNodes[numPhases-2][0];
+       const rNode = rightSideNodes[numPhases-2][0];
+       
+       lines.push({
+          d: `M ${lNode.x + CARD_WIDTH} ${lNode.y + CARD_HEIGHT/2} L ${finalX} ${finalY + CARD_HEIGHT/2}`,
+          key: `line_final_left`
+       });
+       lines.push({
+          d: `M ${rNode.x} ${rNode.y + CARD_HEIGHT/2} L ${finalX + CARD_WIDTH} ${finalY + CARD_HEIGHT/2}`,
+          key: `line_final_right`
+       });
+    }
+    
+    let maxX = 0;
+    let maxY = 0;
+    nodes.forEach(n => {
+       if (n.x > maxX) maxX = n.x;
+       if (n.y > maxY) maxY = n.y;
+    });
+    
+    return { nodes, lines, width: maxX + CARD_WIDTH + 40, height: Math.max(maxY + CARD_HEIGHT + 40, Dimensions.get('window').height) };
   };
 
   const renderTeam = (team: Team, score: number, winnerId?: string, isPlaceholder?: boolean) => {
     const isWinner = winnerId === team.id;
     return (
-      <View className={`flex-row justify-between items-center p-2 border-b border-[#d8ccb4] dark:border-[#262626] ${isWinner ? 'bg-blue-50 dark:bg-blue-900/20' : ''}`}>
+      <View className={`flex-row justify-between items-center mt-1`}>
         <Text 
-          className={`text-xs ${isPlaceholder ? 'text-gray-400' : 'text-gray-800 dark:text-gray-200'} ${isWinner ? 'font-bold text-[#2563EB]' : ''}`} 
+          className={`text-xs font-semibold flex-1 ${isPlaceholder ? 'text-gray-600 italic' : 'text-gray-900 dark:text-white'} ${isWinner ? 'font-bold' : ''}`} 
           numberOfLines={1}
         >
-          {team.name}
+          {isPlaceholder ? 'A Definir' : team.name}
         </Text>
-        <Text className={`text-xs font-bold ${isWinner ? 'text-[#2563EB]' : 'text-gray-500'}`}>
-          {score}
-        </Text>
+        {!isPlaceholder && (
+          <Text className={`text-sm font-black ml-1 ${isWinner ? 'text-brand-primary dark:text-brand-electric-light' : 'text-gray-500'}`}>
+            {score}
+          </Text>
+        )}
       </View>
     );
   };
+
+  const renderMatchCard = (node: any, index: number) => {
+    const { x, y, match, phase } = node;
+    const isFinished = match?.status === 'COMPLETED';
+    const isLive = match?.status === 'LIVE';
+
+    const teamA = match?.teamA;
+    const teamB = match?.teamB;
+    const isPlaceholderA = teamA?.id?.startsWith("placeholder-") || teamA?.id === "bye";
+    const isPlaceholderB = teamB?.id?.startsWith("placeholder-") || teamB?.id === "bye";
+    const isByeMatch = isFinished && isPlaceholderB; 
+
+    return (
+      <View 
+        key={`node_${index}`}
+        style={{
+          position: 'absolute',
+          left: x + 20,
+          top: y + 20,
+          width: CARD_WIDTH,
+          height: CARD_HEIGHT,
+        }}
+        className="bg-[#e6ddca] dark:bg-[#1c1c1c] rounded-xl border border-[#d8ccb4] dark:border-[#262626] overflow-hidden"
+      >
+        <View className={`px-2 py-1 flex-row justify-between items-center ${isLive ? 'bg-red-500/20' : 'bg-gray-200 dark:bg-[#0a0a0a]'}`}>
+          <Text className={`text-[9px] font-bold ${isLive ? 'text-red-500' : 'text-gray-600 dark:text-gray-500'}`}>
+            {match ? (isByeMatch ? 'BYE' : (isLive ? 'AO VIVO' : isFinished ? 'ENCERRADO' : 'AGENDADO')) : phase.toUpperCase()}
+          </Text>
+          {match && <Text className="text-gray-500 text-[9px]">Mesa {match.tableNumber}</Text>}
+        </View>
+
+        <View className="p-2 flex-1 justify-center">
+          {match ? (
+            <>
+              {renderTeam(teamA, match.scoreA, match.winnerId, isPlaceholderA)}
+              {!isByeMatch && renderTeam(teamB, match.scoreB, match.winnerId, isPlaceholderB)}
+            </>
+          ) : (
+            <>
+              <Text className="text-gray-500 text-xs font-semibold">A Definir</Text>
+              <Text className="text-gray-500 text-xs font-semibold mt-1">A Definir</Text>
+            </>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  const { nodes, lines, width, height } = calculateBracketLayout();
 
   return (
     <View className="flex-1">
       <View className="px-4 py-3 bg-[#e6ddca] dark:bg-[#1c1c1c] border-b border-[#d8ccb4] dark:border-brand-border-focus flex-row justify-between items-center">
         <Text className="text-gray-900 dark:text-white font-bold">Chaveamento do Torneio</Text>
-        <TouchableOpacity onPress={exportBracketPDF} className="flex-row items-center bg-[#2563EB] px-4 py-2 rounded-lg">
+        <TouchableOpacity onPress={exportBracketPDF} className="flex-row items-center bg-brand-primary dark:bg-brand-electric-light px-4 py-2 rounded-lg">
           <Ionicons name="document-text" size={16} color="white" />
-          <Text className="text-white font-bold text-xs ml-2 uppercase">Exportar PDF</Text>
+          <Text className="text-white font-bold text-xs ml-2 uppercase">PDF</Text>
         </TouchableOpacity>
       </View>
-      <ScrollView horizontal className="flex-1 bg-[#f2ece0] dark:bg-[#0a0a0a] p-4">
-        <View className="flex-row items-start space-x-6">
-        {phases.map((phase) => (
-          <View key={phase} className="w-64 space-y-4">
-            <View className="bg-[#2563EB] py-2 rounded-t-xl mb-2 items-center">
-              <Text className="text-white font-bold uppercase text-xs tracking-widest">{phase}</Text>
-            </View>
-            
-            <View className="flex-col justify-around h-full space-y-6">
-              {matchesByPhase[phase].map((match) => (
-                <View 
-                  key={match.id} 
-                  className="bg-[#e6ddca] dark:bg-[#1c1c1c] border border-[#d8ccb4] dark:border-brand-border-focus rounded-lg overflow-hidden shadow-sm"
-                >
-                  <View className="bg-gray-100 dark:bg-[#262626] px-2 py-1 flex-row justify-between items-center">
-                    <Text className="text-[10px] text-gray-500 uppercase font-bold">Mesa {match.tableNumber}</Text>
-                    {match.status === "LIVE" && (
-                      <Text className="text-[10px] text-red-500 font-bold uppercase">Ao Vivo</Text>
-                    )}
-                    {match.status === "COMPLETED" && (
-                      <Text className="text-[10px] text-green-500 font-bold uppercase">Fim</Text>
-                    )}
-                  </View>
-                  
-                  <View>
-                    {renderTeam(match.teamA, match.scoreA, match.winnerId, match.teamA.id.startsWith("placeholder-") || match.teamA.id === "bye")}
-                    {renderTeam(match.teamB, match.scoreB, match.winnerId, match.teamB.id.startsWith("placeholder-") || match.teamB.id === "bye")}
-                  </View>
-                </View>
+      <ScrollView horizontal className="flex-1 bg-[#f2ece0] dark:bg-[#121212]" bounces={false}>
+        <ScrollView className="flex-1" bounces={false}>
+          <View style={{ width, height, position: 'relative', padding: 20 }}>
+            <Svg style={{ position: 'absolute', top: 20, left: 20 }} width={width} height={height}>
+              {lines.map(line => (
+                <Path
+                  key={line.key}
+                  d={line.d}
+                  stroke="#333333"
+                  strokeWidth="2"
+                  fill="none"
+                />
               ))}
-            </View>
+            </Svg>
+            {nodes.map((node, index) => renderMatchCard(node, index))}
           </View>
-        ))}
-      </View>
+        </ScrollView>
       </ScrollView>
     </View>
   );

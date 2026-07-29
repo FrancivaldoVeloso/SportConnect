@@ -51,9 +51,27 @@ export function ProfileScreen({ navigation }: any) {
       
       if (!error && torneios) {
         setMeusTorneios(torneios);
-        // Calcular receita mockada
-        const receita = torneios.reduce((acc, t) => acc + (Number(t.valor_inscricao) * 10), 0);
-        setReceitaTotal(receita);
+        
+        // Calcular receita real buscando todas as inscrições aprovadas desses torneios
+        if (torneios.length > 0) {
+          const torneioIds = torneios.map(t => t.id);
+          const { data: inscricoesPagas } = await supabase
+            .from('inscricoes')
+            .select('torneio_id')
+            .in('torneio_id', torneioIds)
+            .eq('status', 'aprovado');
+            
+          let receita = 0;
+          if (inscricoesPagas) {
+            inscricoesPagas.forEach(insc => {
+               const t = torneios.find(t => t.id === insc.torneio_id);
+               if (t) receita += Number(t.valor_inscricao);
+            });
+          }
+          setReceitaTotal(receita);
+        } else {
+          setReceitaTotal(0);
+        }
       }
 
       if (user.tipo_perfil === 'capitao' || user.tipo_perfil === 'atleta') {
@@ -216,7 +234,7 @@ export function ProfileScreen({ navigation }: any) {
         <View className="absolute right-[-20] top-[-20] opacity-10">
           <Ionicons name="cash" size={120} color="#fff" />
         </View>
-        <Text className="text-blue-100 dark:text-slate-300 text-xs font-bold tracking-widest uppercase mb-1">Receita Estimada (MVP)</Text>
+        <Text className="text-blue-100 dark:text-slate-300 text-xs font-bold tracking-widest uppercase mb-1">Receita Arrecadada</Text>
         <Text className="text-white text-4xl font-black mb-1">R$ {receitaTotal.toFixed(2)}</Text>
         <Text className="text-blue-200 dark:text-slate-400 text-xs">Total arrecadado em inscrições</Text>
       </View>
@@ -225,21 +243,13 @@ export function ProfileScreen({ navigation }: any) {
 
   const renderRefereeDashboard = () => (
     <View className="mx-6 mt-6 space-y-6">
-      {/* Partidas Alocadas (Mock) */}
+      {/* Partidas Alocadas */}
       <View className="bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
         <View className="flex-row items-center justify-between mb-4">
           <Text className="text-gray-900 dark:text-white font-bold text-lg">Partidas Alocadas</Text>
           <Ionicons name="flag-outline" size={20} color={isDark ? '#3B82F6' : '#2563EB'} />
         </View>
-        <View className="bg-[#f2ece0] dark:bg-brand-bg p-4 rounded-lg border border-[#d8ccb4] dark:border-brand-border-focus">
-          <Text className="text-gray-800 dark:text-white font-bold text-center mb-2">Final - Dominó em Duplas</Text>
-          <View className="flex-row justify-center items-center">
-            <Text className="text-gray-600 dark:text-gray-400 font-semibold">Time A</Text>
-            <Text className="text-gray-400 mx-3">X</Text>
-            <Text className="text-gray-600 dark:text-gray-400 font-semibold">Time B</Text>
-          </View>
-          <Text className="text-brand-primary dark:text-brand-electric-light text-xs text-center mt-3 font-bold">HOJE - 19:00</Text>
-        </View>
+        <Text className="text-gray-500 dark:text-gray-400 text-sm italic">Nenhuma partida alocada para você hoje.</Text>
       </View>
     </View>
   );

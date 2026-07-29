@@ -61,11 +61,11 @@ export function AthleteTournamentDetailsScreen({ route, navigation }: any) {
   const dataFormatada = torneio.data_inicio ? new Date(torneio.data_inicio + (torneio.data_inicio.includes('T') ? '' : 'T12:00:00Z')).toLocaleDateString('pt-BR') : 'Data não definida';
   const horaFormatada = torneio.hora_inicio ? torneio.hora_inicio : 'Horário a definir';
 
-  const isIndividual = torneio.modalidade === 'Ping Pong' || torneio.modalidade === 'Tênis';
-  const labelInscricao = isIndividual ? 'Inscrever-se' : 'Inscrever Equipe';
-  const labelVagas = isIndividual ? 'Vagas' : 'Times';
-  const labelConfirmados = isIndividual ? 'Atletas Confirmados' : 'Equipes Confirmadas';
-  const labelNenhumConfirmado = isIndividual ? 'Nenhum atleta confirmado ainda.' : 'Nenhuma equipe confirmada ainda.';
+  const isIndividual = torneio.modalidade === 'SOLO';
+  const labelInscricao = torneio.modalidade === 'SOLO' ? 'Inscrever-se' : (torneio.modalidade === 'DUPLA' ? 'Inscrever Dupla' : 'Inscrever Equipe');
+  const labelVagas = torneio.modalidade === 'SOLO' ? 'Vagas' : (torneio.modalidade === 'DUPLA' ? 'Duplas' : 'Times');
+  const labelConfirmados = torneio.modalidade === 'SOLO' ? 'Atletas Confirmados' : (torneio.modalidade === 'DUPLA' ? 'Duplas Confirmadas' : 'Equipes Confirmadas');
+  const labelNenhumConfirmado = torneio.modalidade === 'SOLO' ? 'Nenhum atleta confirmado ainda.' : (torneio.modalidade === 'DUPLA' ? 'Nenhuma dupla confirmada ainda.' : 'Nenhuma equipe confirmada ainda.');
 
   return (
     <SafeAreaView className="flex-1 bg-[#f2ece0] dark:bg-brand-bg" edges={['top']}>
@@ -180,7 +180,7 @@ export function AthleteTournamentDetailsScreen({ route, navigation }: any) {
             </View>
           ) : (
             <TouchableOpacity 
-              onPress={() => navigation.navigate('TeamRegistration', { torneioId: torneio.id, isIndividual })}
+              onPress={() => navigation.navigate('TeamRegistration', { torneioId: torneio.id, modalidade: torneio.modalidade, isIndividual, valorInscricao: torneio.valor_inscricao })}
               className="bg-brand-primary dark:bg-brand-electric-light py-4 rounded-xl items-center shadow-md flex-row justify-center"
             >
               <Ionicons name="shield-checkmark" size={20} color="#fff" className="mr-2 dark:text-[#0a0a0a]" />

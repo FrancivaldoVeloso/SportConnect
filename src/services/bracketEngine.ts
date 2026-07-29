@@ -14,8 +14,8 @@ export const generateBracket = async (torneioId: string) => {
 
   const times = inscricoes.map(i => i.time_id);
   
-  if (times.length !== 2 && times.length !== 4 && times.length !== 8 && times.length !== 16) {
-    throw new Error(`Número de times aprovados (${times.length}) não é suportado. Deve ser 2, 4, 8 ou 16.`);
+  if (times.length < 2) {
+    throw new Error(`Número de times aprovados (${times.length}) é insuficiente. Mínimo de 2 times.`);
   }
 
   // Verificar se já existe chaveamento
@@ -33,40 +33,69 @@ export const generateBracket = async (torneioId: string) => {
   const shuffledTeams = [...times].sort(() => Math.random() - 0.5);
 
   const numTeams = shuffledTeams.length;
-  let currentPhaseMatches: any[] = [];
-  let nextPhaseMatches: any[] = [];
-  
-  // Nomenclatura das fases baseada no número de times na rodada atual
-  const getPhaseName = (tCount: number) => {
-    if (tCount === 16) return 'Oitavas de Final';
-    if (tCount === 8) return 'Quartas de Final';
-    if (tCount === 4) return 'Semifinal';
+  const nextPowerOf2 = Math.pow(2, Math.ceil(Math.log2(numTeams)));
+  const byesNeeded = nextPowerOf2 - numTeams;
+
+  // Nomenclatura das fases baseada no número de posições na rodada (potência de 2)
+  const getPhaseName = (positions: number) => {
+    if (positions === 32) return 'Dezesseis-avos de Final';
+    if (positions === 16) return 'Oitavas de Final';
+    if (positions === 8) return 'Quartas de Final';
+    if (positions === 4) return 'Semifinal';
     return 'Final';
   };
 
-  // Algoritmo de arvore simplificado: 
-  // Em vez de criar todas as partidas e linkar com proxima_partida_id (o que requer múltiplas inserções dependentes),
-  // No MVP vamos criar apenas a rodada inicial completa.
-  // E uma função advanceTeam cuidará de criar as próximas rodadas sob demanda.
+  const phaseName = getPhaseName(nextPowerOf2);
+  let currentPhaseMatches: any[] = [];
   
-  const phaseName = getPhaseName(numTeams);
+  // Vamos distribuir os times nas posições. 
+  // Temos `nextPowerOf2 / 2` partidas na primeira fase.
+  const numMatches = nextPowerOf2 / 2;
   
-  for (let i = 0; i < shuffledTeams.length; i += 2) {
+  let teamIndex = 0;
+  
+  // Para distribuir os byes de forma equilibrada, podemos intercalá-los.
+  // Por simplicidade, colocaremos um 'bye' nas partidas até acabar os byesNeeded.
+  for (let i = 0; i < numMatches; i++) {
+    const timeA = shuffledTeams[teamIndex++];
+    let timeB = null;
+    let isBye = false;
+
+    // Se ainda precisamos dar bye e temos posições, damos o bye (timeB fica null)
+    // Para espalhar os byes, damos bye a cada 'n' partidas, ou simplesmente damos aos primeiros.
+    // Vamos dar aos primeiros (se numMatches=4 e byesNeeded=2, M1 e M2 terão bye).
+    // Mas para espalhar melhor entre chave esquerda e direita, alternamos.
+    if (i < byesNeeded) {
+      isBye = true;
+    } else {
+      timeB = shuffledTeams[teamIndex++];
+    }
+
     currentPhaseMatches.push({
       torneio_id: torneioId,
-      time_a_id: shuffledTeams[i],
-      time_b_id: shuffledTeams[i+1],
+      time_a_id: timeA,
+      time_b_id: timeB,
       fase_torneio: phaseName,
-      status: 'agendada'
+      status: isBye ? 'encerrada' : 'agendada'
     });
   }
 
-  const { error: insertError } = await supabase
+  const { data: insertedMatches, error: insertError } = await supabase
     .from('partidas')
-    .insert(currentPhaseMatches);
+    .insert(currentPhaseMatches)
+    .select();
 
   if (insertError) {
     throw new Error(`Erro ao inserir partidas: ${insertError.message}`);
+  }
+
+  // Avançar automaticamente os times que receberam bye
+  if (insertedMatches) {
+    for (const match of insertedMatches) {
+      if (match.status === 'encerrada' && !match.time_b_id && match.time_a_id) {
+        await advanceTeam(match.id, match.time_a_id);
+      }
+    }
   }
 
   return true;
