@@ -183,7 +183,7 @@ export function DashboardScreen({ navigation }: any) {
                   <View className="flex-row items-center mb-4">
                     <Ionicons name="calendar-outline" size={14} color="#888" />
                     <Text className="text-gray-500 dark:text-gray-400 text-sm ml-1">
-                      {new Date(torneio.data_inicio).toLocaleDateString('pt-BR')}
+                      {torneio.data_inicio ? new Date(torneio.data_inicio + (torneio.data_inicio.includes('T') ? '' : 'T12:00:00Z')).toLocaleDateString('pt-BR') : 'Sem data'}
                     </Text>
                   </View>
 

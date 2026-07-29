@@ -58,7 +58,7 @@ export function AthleteTournamentDetailsScreen({ route, navigation }: any) {
   };
 
   const defaultImage = 'https://images.unsplash.com/photo-1546519638-68e109498ffc?q=80&w=600&auto=format&fit=crop';
-  const dataFormatada = torneio.data_inicio ? new Date(torneio.data_inicio).toLocaleDateString('pt-BR') : 'Data não definida';
+  const dataFormatada = torneio.data_inicio ? new Date(torneio.data_inicio + (torneio.data_inicio.includes('T') ? '' : 'T12:00:00Z')).toLocaleDateString('pt-BR') : 'Data não definida';
   const horaFormatada = torneio.hora_inicio ? torneio.hora_inicio : 'Horário a definir';
 
   const isIndividual = torneio.modalidade === 'Ping Pong' || torneio.modalidade === 'Tênis';

@@ -85,7 +85,7 @@ export function HubScreen({ navigation }: any) {
           </View>
         ) : (
           torneios.map((torneio) => {
-            const dataFormatada = torneio.data_inicio ? new Date(torneio.data_inicio).toLocaleDateString('pt-BR') : 'Data Indefinida';
+            const dataFormatada = torneio.data_inicio ? new Date(torneio.data_inicio + (torneio.data_inicio.includes('T') ? '' : 'T12:00:00Z')).toLocaleDateString('pt-BR') : 'Data Indefinida';
             const horaFormatada = torneio.hora_inicio || 'Horário Indefinido';
             return (
               <TouchableOpacity 

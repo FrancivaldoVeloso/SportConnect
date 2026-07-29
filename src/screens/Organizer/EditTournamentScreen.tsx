@@ -20,9 +20,16 @@ export function EditTournamentScreen({ route, navigation }: any) {
     return date;
   };
 
+  const parseDataInicio = (dateString: string) => {
+    if (!dateString) return new Date();
+    const safeStr = dateString.includes('T') ? dateString : dateString + 'T12:00:00Z';
+    const d = new Date(safeStr);
+    return isNaN(d.getTime()) ? new Date() : d;
+  };
+
   const [nome, setNome] = useState(torneio.nome);
   const [modalidade, setModalidade] = useState(torneio.modalidade);
-  const [dataInicio, setDataInicio] = useState(new Date(torneio.data_inicio + 'T12:00:00Z'));
+  const [dataInicio, setDataInicio] = useState(parseDataInicio(torneio.data_inicio));
   const [horaInicio, setHoraInicio] = useState(parseHoraInicio(torneio.hora_inicio));
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);

@@ -99,7 +99,7 @@ export function AthleteTournamentsScreen({ navigation }: any) {
                 <View className="flex-row items-center mb-3">
                   <Ionicons name="calendar-outline" size={14} color="#2563EB" />
                   <Text className="text-gray-600 dark:text-gray-400 text-sm ml-1 font-semibold">
-                    {torneio.data_inicio ? new Date(torneio.data_inicio).toLocaleDateString('pt-BR') : 'Sem data'}
+                    {torneio.data_inicio ? new Date(torneio.data_inicio + (torneio.data_inicio.includes('T') ? '' : 'T12:00:00Z')).toLocaleDateString('pt-BR') : 'Sem data'}
                   </Text>
                 </View>
 
