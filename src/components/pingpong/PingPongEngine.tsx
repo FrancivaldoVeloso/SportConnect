@@ -15,12 +15,19 @@ interface TimeDB {
   capitao_id?: string;
 }
 
+interface InscricaoDB {
+  id: string;
+  status: string;
+  comprovante_pix_url?: string;
+  times: TimeDB;
+}
+
 export function PingPongEngine({ torneio }: { torneio: any }) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
   // --- ESTADOS DE CONFIGURAÇÃO DE TIMES ---
-  const [timesDB, setTimesDB] = React.useState<TimeDB[]>([]);
+  const [inscricoes, setInscricoes] = React.useState<InscricaoDB[]>([]);
   const [timesSelecionados, setTimesSelecionados] = useState<TimeDB[]>([]);
   const [campeonatoIniciado, setCampeonatoIniciado] = useState<boolean>(false);
   const [idJogoSelecionado, setIdJogoSelecionado] = useState<string | null>(null);
@@ -35,6 +42,9 @@ export function PingPongEngine({ torneio }: { torneio: any }) {
       const { data, error } = await supabase
         .from('inscricoes')
         .select(`
+          id,
+          status,
+          comprovante_pix_url,
           times (
             id,
             nome,
@@ -42,12 +52,12 @@ export function PingPongEngine({ torneio }: { torneio: any }) {
           )
         `)
         .eq('torneio_id', torneio.id)
-        .eq('status', 'aprovado');
+        .in('status', ['pendente', 'aprovado'])
+        .order('created_at', { ascending: false });
         
       if (error) throw error;
       if (data) {
-        const timesConfirmados = data.map(insc => insc.times).flat().filter(Boolean);
-        setTimesDB(timesConfirmados as unknown as TimeDB[]);
+        setInscricoes(data as any[]);
       }
     } catch (err) {
       console.error("Erro ao carregar inscritos:", err);
@@ -135,7 +145,7 @@ export function PingPongEngine({ torneio }: { torneio: any }) {
   // --- ADICIONAR / REMOVER TIMES ---
   const adicionarTime = (time: TimeDB) => {
     if (timesSelecionados.find(t => t.id === time.id)) {
-      Alert.alert("Aviso", "Este time já está na lista!");
+      Alert.alert("Aviso", "Este participante já está selecionado para o chaveamento!");
       return;
     }
     setTimesSelecionados([...timesSelecionados, time]);
@@ -143,6 +153,40 @@ export function PingPongEngine({ torneio }: { torneio: any }) {
 
   const removerTime = (id: string) => {
     setTimesSelecionados(timesSelecionados.filter(t => t.id !== id));
+  };
+
+  const aprovarInscricao = async (insc: InscricaoDB) => {
+    Alert.alert("Aprovar Inscrição", `Deseja aprovar a inscrição de ${insc.times.nome}?`, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Aprovar", onPress: async () => {
+        const { error } = await supabase.from('inscricoes').update({ status: 'aprovado' }).eq('id', insc.id);
+        if (!error) {
+          carregarTimes();
+        }
+      }}
+    ]);
+  };
+
+  const rejeitarInscricao = async (insc: InscricaoDB) => {
+    Alert.alert("Remover Inscrição", `Deseja remover a inscrição de ${insc.times.nome}?`, [
+      { text: "Cancelar", style: "cancel" },
+      { text: "Remover", style: "destructive", onPress: async () => {
+        const { error } = await supabase.from('inscricoes').update({ status: 'rejeitado' }).eq('id', insc.id);
+        if (!error) {
+          removerTime(insc.times.id);
+          carregarTimes();
+        }
+      }}
+    ]);
+  };
+
+  import { Linking } from 'react-native';
+  const verComprovante = (url?: string) => {
+    if (!url) {
+      Alert.alert("Aviso", "Comprovante não enviado.");
+      return;
+    }
+    Linking.openURL(url).catch(() => Alert.alert("Erro", "Não foi possível abrir o comprovante."));
   };
 
   // --- GERADOR DINÂMICO DE CHAVEAMENTO ---
@@ -646,51 +690,109 @@ export function PingPongEngine({ torneio }: { torneio: any }) {
     <View className="flex-1">
       <ScrollView className="flex-1 p-4 bg-[#f2ece0] dark:bg-brand-bg">
         {!campeonatoIniciado ? (
-          <View className="bg-[#e6ddca] dark:bg-brand-surface p-5 rounded-xl border border-[#d8ccb4] dark:border-brand-border-focus">
-            <View className="flex-row justify-between items-center mb-4">
-              <Text className="text-xl font-bold text-brand-primary dark:text-brand-electric-light">🏓 Participantes</Text>
-              <TouchableOpacity 
-                onPress={handleImportCSV}
-                className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg flex-row items-center"
-              >
-                <Ionicons name="document-text" size={16} color="#fff" />
-                <Text className="text-white font-bold text-xs ml-1">Importar CSV</Text>
-              </TouchableOpacity>
-            </View>
-            
-            <View className="flex-row mb-4">
-              <ScrollView horizontal className="flex-row space-x-2">
-                {timesDB.map(time => (
-                  <TouchableOpacity 
-                    key={time.id} 
-                    onPress={() => adicionarTime(time)}
-                    className="bg-brand-primary dark:bg-brand-electric-light px-4 py-2 rounded-lg mr-2"
-                  >
-                    <Text className="text-white font-bold">{time.nome}</Text>
-                  </TouchableOpacity>
-                ))}
-              </ScrollView>
-            </View>
-
-            <Text className="text-xs text-gray-500 font-bold uppercase mb-2">Inscritos ({timesSelecionados.length})</Text>
-            <View className="flex-row flex-wrap mb-6">
-              {timesSelecionados.map((time, idx) => (
-                <View key={idx} className="flex-row items-center bg-[#f2ece0] dark:bg-brand-bg border border-[#d8ccb4] dark:border-brand-border-focus rounded-full px-3 py-1 mr-2 mb-2">
-                  <Text className="text-gray-800 dark:text-gray-200 text-xs mr-2">{time.nome}</Text>
-                  <TouchableOpacity onPress={() => removerTime(time.id)}>
-                    <Ionicons name="close-circle" size={16} color="#EF4444" />
-                  </TouchableOpacity>
+          <View className="mb-10">
+            {/* NOVO QUADRO DE INSCRIÇÕES BONITO */}
+            <View className="bg-[#e6ddca] dark:bg-brand-surface rounded-2xl border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm overflow-hidden mb-6">
+              
+              <View className="bg-brand-primary dark:bg-brand-electric-light p-5 flex-row justify-between items-center">
+                <View>
+                  <Text className="text-white dark:text-[#0a0a0a] text-xl font-black tracking-wide">Quadro de Inscrições</Text>
+                  <Text className="text-blue-100 dark:text-gray-800 text-xs font-semibold mt-1">Gerencie e valide participantes</Text>
                 </View>
-              ))}
+                <TouchableOpacity 
+                  onPress={handleImportCSV}
+                  className="bg-white/20 dark:bg-black/10 px-3 py-2 rounded-lg flex-row items-center border border-white/30 dark:border-black/20"
+                >
+                  <Ionicons name="document-text" size={16} color={isDark ? "#0a0a0a" : "#fff"} />
+                  <Text className="text-white dark:text-[#0a0a0a] font-bold text-xs ml-1">Importar CSV</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View className="p-4 bg-[#f2ece0] dark:bg-brand-bg">
+                {inscricoes.length === 0 ? (
+                  <View className="py-8 items-center justify-center">
+                    <Ionicons name="folder-open-outline" size={48} color="#9CA3AF" />
+                    <Text className="text-gray-500 font-medium mt-3">Nenhuma inscrição registrada.</Text>
+                  </View>
+                ) : (
+                  inscricoes.map(insc => (
+                    <View key={insc.id} className={`flex-row items-center justify-between p-4 mb-3 rounded-xl border ${insc.status === 'pendente' ? 'bg-amber-50 dark:bg-amber-900/10 border-amber-200 dark:border-amber-800/30 border-l-4 border-l-amber-500' : 'bg-white dark:bg-[#1c1c1c] border-gray-200 dark:border-brand-border border-l-4 border-l-green-500'} shadow-sm`}>
+                      <View className="flex-1">
+                        <View className="flex-row items-center mb-1">
+                          <Text className="text-gray-900 dark:text-white font-bold text-lg mr-2">{insc.times?.nome}</Text>
+                          {insc.status === 'pendente' ? (
+                            <View className="bg-amber-100 dark:bg-amber-900/40 px-2 py-0.5 rounded text-[10px]"><Text className="text-amber-700 dark:text-amber-500 font-bold text-[10px] uppercase">Pendente</Text></View>
+                          ) : (
+                            <View className="bg-green-100 dark:bg-green-900/40 px-2 py-0.5 rounded text-[10px]"><Text className="text-green-700 dark:text-green-500 font-bold text-[10px] uppercase">Aprovado</Text></View>
+                          )}
+                        </View>
+                        
+                        <TouchableOpacity onPress={() => verComprovante(insc.comprovante_pix_url)} className="flex-row items-center mt-1">
+                          <Ionicons name="receipt" size={14} color={isDark ? "#3B82F6" : "#2563EB"} />
+                          <Text className="text-brand-primary dark:text-brand-electric-light text-xs font-semibold ml-1">Ver Comprovante</Text>
+                        </TouchableOpacity>
+                      </View>
+
+                      <View className="flex-row items-center ml-2 space-x-2">
+                        {insc.status === 'pendente' && (
+                          <TouchableOpacity onPress={() => aprovarInscricao(insc)} className="bg-green-500 w-10 h-10 rounded-full items-center justify-center shadow-sm">
+                            <Ionicons name="checkmark" size={20} color="#fff" />
+                          </TouchableOpacity>
+                        )}
+                        {insc.status === 'aprovado' && (
+                          <TouchableOpacity onPress={() => adicionarTime(insc.times)} className="bg-brand-primary dark:bg-brand-electric-light w-10 h-10 rounded-full items-center justify-center shadow-sm" disabled={!!timesSelecionados.find(t => t.id === insc.times?.id)}>
+                            <Ionicons name="add" size={20} color={isDark ? "#0a0a0a" : "#fff"} />
+                          </TouchableOpacity>
+                        )}
+                        <TouchableOpacity onPress={() => rejeitarInscricao(insc)} className="bg-red-100 dark:bg-red-900/30 w-10 h-10 rounded-full items-center justify-center border border-red-200 dark:border-red-900/50">
+                          <Ionicons name="trash" size={18} color="#EF4444" />
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))
+                )}
+              </View>
             </View>
 
-            <TouchableOpacity 
-              className={`py-4 rounded-xl items-center ${timesSelecionados.length >= 4 ? 'bg-brand-primary dark:bg-brand-electric-light' : 'bg-gray-300 dark:bg-gray-800'}`}
-              onPress={iniciarCampeonato}
-              disabled={timesSelecionados.length < 4}
-            >
-              <Text className="text-white font-bold uppercase tracking-wider">Iniciar Torneio ({timesSelecionados.length} times)</Text>
-            </TouchableOpacity>
+            {/* AREA DO SORTEIO E SELEÇÃO */}
+            <View className="bg-[#e6ddca] dark:bg-brand-surface p-5 rounded-2xl border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
+              <View className="flex-row items-center justify-between mb-4">
+                <Text className="text-gray-900 dark:text-white text-lg font-bold">Participantes do Sorteio</Text>
+                <View className="bg-gray-200 dark:bg-brand-border px-3 py-1 rounded-full">
+                  <Text className="text-gray-600 dark:text-gray-300 text-xs font-bold">{timesSelecionados.length} selecionados</Text>
+                </View>
+              </View>
+              
+              {timesSelecionados.length === 0 ? (
+                <Text className="text-gray-500 text-sm text-center py-4">Adicione os participantes aprovados ao sorteio clicando no botão "+" no quadro acima.</Text>
+              ) : (
+                <View className="flex-row flex-wrap mb-4">
+                  {timesSelecionados.map((time, idx) => (
+                    <View key={idx} className="flex-row items-center bg-[#f2ece0] dark:bg-brand-bg border border-[#d8ccb4] dark:border-brand-border-focus rounded-full px-3 py-1.5 mr-2 mb-2 shadow-sm">
+                      <Text className="text-gray-800 dark:text-gray-200 text-sm font-semibold mr-2">{time.nome}</Text>
+                      <TouchableOpacity onPress={() => removerTime(time.id)}>
+                        <Ionicons name="close-circle" size={18} color="#EF4444" />
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              )}
+
+              <TouchableOpacity 
+                className={`py-4 rounded-xl items-center flex-row justify-center shadow-sm ${timesSelecionados.length >= 4 ? 'bg-brand-primary dark:bg-brand-electric-light' : 'bg-gray-300 dark:bg-gray-800'}`}
+                onPress={iniciarCampeonato}
+                disabled={timesSelecionados.length < 4}
+              >
+                <Ionicons name="git-network" size={20} color={timesSelecionados.length >= 4 ? (isDark ? '#0a0a0a' : '#fff') : '#888'} className="mr-2" />
+                <Text className={`${timesSelecionados.length >= 4 ? 'text-white dark:text-[#0a0a0a]' : 'text-gray-500'} font-black text-base uppercase tracking-wider`}>Gerar Chaves do Torneio</Text>
+              </TouchableOpacity>
+              
+              {timesSelecionados.length < 4 && (
+                <Text className="text-amber-600 dark:text-amber-500 text-xs text-center mt-3 font-semibold">
+                  * É necessário pelo menos 4 participantes selecionados.
+                </Text>
+              )}
+            </View>
           </View>
         ) : (
           <View>

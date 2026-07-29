@@ -25,6 +25,21 @@ export function TeamRegistrationScreen({ route, navigation }: any) {
 
     try {
       setLoading(true);
+
+      if (isIndividual) {
+        // Verificar se já existe inscrição deste usuário neste torneio
+        const { data: existingInsc, error: checkError } = await supabase
+          .from('inscricoes')
+          .select('id, times!inner(capitao_id)')
+          .eq('torneio_id', torneioId)
+          .eq('times.capitao_id', user.id);
+          
+        if (existingInsc && existingInsc.length > 0) {
+          Alert.alert('Aviso', 'Você já está inscrito neste torneio individual! Apenas uma inscrição por login é permitida.');
+          setLoading(false);
+          return;
+        }
+      }
       
       // Criar o time no banco
       const { data: time, error: timeError } = await supabase
