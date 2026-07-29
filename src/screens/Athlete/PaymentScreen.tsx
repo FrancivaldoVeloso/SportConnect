@@ -83,7 +83,7 @@ export function PaymentScreen({ route, navigation }: any) {
       if (error) throw error;
 
       Alert.alert('Sucesso!', 'Sua inscrição foi enviada e está aguardando aprovação do organizador.', [
-        { text: 'OK', onPress: () => navigation.reset({ index: 0, routes: [{ name: 'AthleteTabs' }] }) }
+        { text: 'OK', onPress: () => navigation.navigate('AthleteTabs', { screen: 'Feed' }) }
       ]);
 
     } catch (error: any) {
