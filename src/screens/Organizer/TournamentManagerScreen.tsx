@@ -80,6 +80,7 @@ export function TournamentManagerScreen({ route, navigation }: any) {
               teams={teams}
               onAddTeam={handleAddTeam}
               onDeleteTeam={handleDeleteTeam}
+              onImportTeams={dominoContext.handleImportTeams}
               onGenerateBracket={() => {
                 handleGenerateBracket();
                 setActiveTab('bracket');
@@ -108,8 +109,8 @@ export function TournamentManagerScreen({ route, navigation }: any) {
 
   const renderEngine = () => {
     switch (torneio.modalidade) {
-      case 'Vôlei': return <VoleiEngine />;
-      case 'Ping Pong': return <PingPongEngine />;
+      case 'Vôlei': return <VoleiEngine torneio={torneio} />;
+      case 'Ping Pong': return <PingPongEngine torneio={torneio} />;
       default: return renderDominoEngine();
     }
   };
@@ -125,6 +126,12 @@ export function TournamentManagerScreen({ route, navigation }: any) {
           <Text className="text-gray-900 dark:text-white text-lg font-bold" numberOfLines={1}>{torneio.nome}</Text>
           <Text className="text-brand-primary dark:text-brand-electric-light text-xs font-bold uppercase">{torneio.modalidade}</Text>
         </View>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('EditTournament', { torneio })}
+          className="bg-brand-primary/10 dark:bg-brand-electric-light/10 p-2 rounded-full"
+        >
+          <Ionicons name="pencil" size={20} color={isDark ? '#3B82F6' : '#2563EB'} />
+        </TouchableOpacity>
       </View>
 
       {/* Conteúdo Dinâmico Baseado na Modalidade */}

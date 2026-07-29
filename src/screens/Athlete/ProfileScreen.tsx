@@ -7,7 +7,7 @@ import { useColorScheme } from 'nativewind';
 import { AuthContext } from '../../contexts/AuthContext';
 import { supabase } from '../../services/supabase';
 
-export function ProfileScreen() {
+export function ProfileScreen({ navigation }: any) {
   const { user, signIn, signOut } = useContext(AuthContext);
   const { colorScheme, toggleColorScheme } = useColorScheme();
   
@@ -44,19 +44,19 @@ export function ProfileScreen() {
     if (!user) return;
     setLoadingData(true);
     try {
-      if (user.tipo_perfil === 'organizador') {
-        const { data: torneios, error } = await supabase
-          .from('torneios')
-          .select('*')
-          .eq('organizador_id', user.id);
-        
-        if (!error && torneios) {
-          setMeusTorneios(torneios);
-          // Calcular receita mockada
-          const receita = torneios.reduce((acc, t) => acc + (Number(t.valor_inscricao) * 10), 0);
-          setReceitaTotal(receita);
-        }
-      } else if (user.tipo_perfil === 'capitao' || user.tipo_perfil === 'atleta') {
+      const { data: torneios, error } = await supabase
+        .from('torneios')
+        .select('*')
+        .eq('organizador_id', user.id);
+      
+      if (!error && torneios) {
+        setMeusTorneios(torneios);
+        // Calcular receita mockada
+        const receita = torneios.reduce((acc, t) => acc + (Number(t.valor_inscricao) * 10), 0);
+        setReceitaTotal(receita);
+      }
+
+      if (user.tipo_perfil === 'capitao' || user.tipo_perfil === 'atleta') {
         if (user.tipo_perfil === 'capitao') {
           const { data: times, error: timeError } = await supabase
             .from('times')
@@ -220,27 +220,6 @@ export function ProfileScreen() {
         <Text className="text-white text-4xl font-black mb-1">R$ {receitaTotal.toFixed(2)}</Text>
         <Text className="text-blue-200 dark:text-slate-400 text-xs">Total arrecadado em inscrições</Text>
       </View>
-
-      {/* Meus Torneios */}
-      <View className="bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
-        <View className="flex-row items-center justify-between mb-4">
-          <Text className="text-gray-900 dark:text-white font-bold text-lg">Meus Torneios</Text>
-          <Ionicons name="trophy-outline" size={20} color={isDark ? '#888' : '#555'} />
-        </View>
-        {meusTorneios.length > 0 ? (
-          meusTorneios.map(t => (
-            <TouchableOpacity key={t.id} className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-brand-border-focus">
-              <View>
-                <Text className="text-gray-800 dark:text-gray-200 font-semibold text-base">{t.nome}</Text>
-                <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">{t.modalidade}</Text>
-              </View>
-              <Ionicons name="chevron-forward" size={20} color={isDark ? '#555' : '#CCC'} />
-            </TouchableOpacity>
-          ))
-        ) : (
-          <Text className="text-gray-500 dark:text-gray-400 text-sm italic">Você ainda não criou torneios.</Text>
-        )}
-      </View>
     </View>
   );
 
@@ -262,6 +241,45 @@ export function ProfileScreen() {
           <Text className="text-brand-primary dark:text-brand-electric-light text-xs text-center mt-3 font-bold">HOJE - 19:00</Text>
         </View>
       </View>
+    </View>
+  );
+
+  const renderMeusTorneios = () => (
+    <View className="bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm mt-6 mx-6">
+      <View className="flex-row items-center justify-between mb-4">
+        <View className="flex-row items-center">
+          <Text className="text-gray-900 dark:text-white font-bold text-lg mr-2">Meus Torneios</Text>
+          <Ionicons name="trophy-outline" size={20} color={isDark ? '#888' : '#555'} />
+        </View>
+        <TouchableOpacity 
+          onPress={() => navigation.navigate('CreateTournament')}
+          className="bg-brand-primary dark:bg-brand-electric-light px-3 py-1.5 rounded-lg flex-row items-center shadow-sm"
+        >
+          <Ionicons name="add" size={16} color={isDark ? '#0a0a0a' : '#fff'} className="mr-1" />
+          <Text className="text-white dark:text-[#0a0a0a] text-xs font-bold">Novo</Text>
+        </TouchableOpacity>
+      </View>
+      {meusTorneios.length > 0 ? (
+        meusTorneios.map(t => (
+          <TouchableOpacity 
+            key={t.id} 
+            onPress={() => navigation.navigate('TournamentManager', { torneio: t })}
+            className="flex-row justify-between items-center py-3 border-b border-gray-100 dark:border-brand-border-focus"
+          >
+            <View>
+              <Text className="text-gray-800 dark:text-gray-200 font-semibold text-base">{t.nome}</Text>
+              <Text className="text-gray-500 dark:text-gray-400 text-xs mt-1">{t.modalidade}</Text>
+            </View>
+            <View className="bg-gray-100 dark:bg-brand-border p-2 rounded-full">
+              <Ionicons name="settings-outline" size={18} color={isDark ? '#3B82F6' : '#2563EB'} />
+            </View>
+          </TouchableOpacity>
+        ))
+      ) : (
+        <View className="py-4 items-center">
+          <Text className="text-gray-500 dark:text-gray-400 text-sm italic mb-3">Você ainda não criou torneios.</Text>
+        </View>
+      )}
     </View>
   );
 
@@ -333,6 +351,9 @@ export function ProfileScreen() {
 
         {/* Dashboards Dinâmicos */}
         {renderDashboardByRole()}
+
+        {/* Meus Torneios - Para todos os usuários */}
+        {renderMeusTorneios()}
 
         {/* Configurações & Segurança */}
         <View className="mx-6 mt-6 bg-[#e6ddca] dark:bg-brand-surface rounded-xl p-4 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm mb-6">

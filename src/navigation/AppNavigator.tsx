@@ -19,7 +19,9 @@ import { PaymentScreen } from '../screens/Athlete/PaymentScreen';
 import { BracketScreen } from '../screens/Athlete/BracketScreen';
 import { RankingScreen } from '../screens/Athlete/RankingScreen';
 import { CourtReservationScreen } from '../screens/Athlete/CourtReservationScreen';
+import { AthleteTournamentsScreen } from '../screens/Athlete/AthleteTournamentsScreen';
 import { CreateTournamentScreen } from '../screens/Organizer/CreateTournamentScreen';
+import { AthleteTournamentDetailsScreen } from '../screens/Athlete/AthleteTournamentDetailsScreen';
 import { supabase } from '../services/supabase';
 import { AuthContext } from '../contexts/AuthContext';
 import { Ionicons } from '@expo/vector-icons';
@@ -97,6 +99,11 @@ function AthleteTabs() {
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="home" size={size} color={color} /> }}
       />
       <Tab.Screen 
+        name="Meus Torneios" 
+        component={AthleteTournamentsScreen}
+        options={{ tabBarIcon: ({ color, size }) => <Ionicons name="trophy" size={size} color={color} /> }}
+      />
+      <Tab.Screen 
         name="Ranking" 
         component={RankingScreen}
         options={{ tabBarIcon: ({ color, size }) => <Ionicons name="podium" size={size} color={color} /> }}
@@ -132,19 +139,19 @@ export function AppNavigator() {
       <Stack.Navigator screenOptions={{ headerShown: false }}>
         {!user ? (
           <Stack.Screen name="Auth" component={AuthStack} />
-        ) : user.tipo_perfil === 'organizador' ? (
+        ) : (
           <>
-            <Stack.Screen name="OrganizerApp" component={OrganizerTabs} />
+            <Stack.Screen 
+              name={user.tipo_perfil === 'organizador' ? "OrganizerApp" : "AthleteApp"} 
+              component={user.tipo_perfil === 'organizador' ? OrganizerTabs : AthleteTabs} 
+            />
             <Stack.Screen name="CreateTournament" component={CreateTournamentScreen} />
             <Stack.Screen name="EditTournament" component={EditTournamentScreen} />
             <Stack.Screen name="TournamentManager" component={TournamentManagerScreen} />
-          </>
-        ) : (
-          <>
-            <Stack.Screen name="AthleteApp" component={AthleteTabs} />
             <Stack.Screen name="TeamRegistration" component={TeamRegistrationScreen} />
             <Stack.Screen name="Payment" component={PaymentScreen} />
             <Stack.Screen name="Bracket" component={BracketScreen} />
+            <Stack.Screen name="AthleteTournamentDetails" component={AthleteTournamentDetailsScreen} />
           </>
         )}
       </Stack.Navigator>

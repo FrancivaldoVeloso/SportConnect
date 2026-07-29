@@ -13,7 +13,9 @@ export function CreateTournamentScreen({ navigation }: any) {
   const [nome, setNome] = useState('');
   const [modalidade, setModalidade] = useState('Dominó');
   const [dataInicio, setDataInicio] = useState(new Date());
+  const [horaInicio, setHoraInicio] = useState(new Date());
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [local, setLocal] = useState('');
   const [numeroMaxTimes, setNumeroMaxTimes] = useState('');
   const [valorInscricao, setValorInscricao] = useState('');
@@ -28,8 +30,9 @@ export function CreateTournamentScreen({ navigation }: any) {
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
+      aspect: [16, 9],
       quality: 0.8,
     });
 
@@ -57,6 +60,7 @@ export function CreateTournamentScreen({ navigation }: any) {
       nome,
       modalidade,
       data_inicio: dataInicio.toISOString().split('T')[0],
+      hora_inicio: horaInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       local,
       numero_max_times: parseInt(numeroMaxTimes, 10),
       valor_inscricao: parseFloat(valorInscricao),
@@ -100,7 +104,7 @@ export function CreateTournamentScreen({ navigation }: any) {
 
         <Input 
           label="Nome do Torneio" 
-          placeholder="Ex: Taça Picos de Dominó" 
+          placeholder="Taça Picos de Dominó" 
           value={nome}
           onChangeText={setNome}
         />
@@ -108,7 +112,7 @@ export function CreateTournamentScreen({ navigation }: any) {
         <View className="mb-4">
           <Text className="text-gray-500 dark:text-gray-400 font-bold mb-2 ml-1 text-sm uppercase tracking-wider">Descrição</Text>
           <Input 
-            placeholder="Ex: O maior torneio da região..." 
+            placeholder="O maior torneio da região..." 
             value={descricao}
             onChangeText={setDescricao}
           />
@@ -158,17 +162,29 @@ export function CreateTournamentScreen({ navigation }: any) {
           </View>
         )}
         
-        <View className="mb-4">
-          <Text className="text-gray-500 dark:text-gray-400 font-bold mb-2 ml-1 text-sm uppercase tracking-wider">Data de Início</Text>
-          <TouchableOpacity 
-            onPress={() => setShowDatePicker(true)}
-            className="bg-[#e6ddca] dark:bg-brand-surface border border-[#d8ccb4] dark:border-brand-border-focus rounded-xl px-4 py-4 flex-row items-center"
-          >
-            <Text className="text-gray-900 dark:text-white font-bold flex-1">
-              {dataInicio.toLocaleDateString('pt-BR')}
-            </Text>
-            <Text className="text-brand-primary dark:text-brand-electric-light text-xs font-bold uppercase">Alterar</Text>
-          </TouchableOpacity>
+        <View className="flex-row space-x-4 mb-4">
+          <View className="flex-1 mr-2">
+            <Text className="text-gray-500 dark:text-gray-400 font-bold mb-2 ml-1 text-sm uppercase tracking-wider">Data de Início</Text>
+            <TouchableOpacity 
+              onPress={() => setShowDatePicker(true)}
+              className="bg-[#e6ddca] dark:bg-brand-surface border border-[#d8ccb4] dark:border-brand-border-focus rounded-xl px-4 py-4 flex-row items-center"
+            >
+              <Text className="text-gray-900 dark:text-white font-bold flex-1">
+                {dataInicio.toLocaleDateString('pt-BR')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View className="flex-1 ml-2">
+            <Text className="text-gray-500 dark:text-gray-400 font-bold mb-2 ml-1 text-sm uppercase tracking-wider">Horário</Text>
+            <TouchableOpacity 
+              onPress={() => setShowTimePicker(true)}
+              className="bg-[#e6ddca] dark:bg-brand-surface border border-[#d8ccb4] dark:border-brand-border-focus rounded-xl px-4 py-4 flex-row items-center"
+            >
+              <Text className="text-gray-900 dark:text-white font-bold flex-1">
+                {horaInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {showDatePicker && (
@@ -185,16 +201,30 @@ export function CreateTournamentScreen({ navigation }: any) {
           />
         )}
         
+        {showTimePicker && (
+          <DateTimePicker
+            value={horaInicio}
+            mode="time"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(event, selectedDate) => {
+              setShowTimePicker(false);
+              if (selectedDate) {
+                setHoraInicio(selectedDate);
+              }
+            }}
+          />
+        )}
+        
         <Input 
           label="Local" 
-          placeholder="Ex: Quadra Poliesportiva" 
+          placeholder="Quadra Poliesportiva" 
           value={local}
           onChangeText={setLocal}
         />
         
         <Input 
           label="Número de Vagas (Times/Duplas)" 
-          placeholder="Ex: 16" 
+          placeholder="16" 
           keyboardType="numeric"
           value={numeroMaxTimes}
           onChangeText={setNumeroMaxTimes}
@@ -202,7 +232,7 @@ export function CreateTournamentScreen({ navigation }: any) {
         
         <Input 
           label="Valor da Inscrição (R$)" 
-          placeholder="Ex: 50.00" 
+          placeholder="50.00" 
           keyboardType="numeric"
           value={valorInscricao}
           onChangeText={setValorInscricao}

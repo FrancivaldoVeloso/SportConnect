@@ -1,11 +1,14 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Alert } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as DocumentPicker from "expo-document-picker";
+import * as FileSystem from "expo-file-system";
 import { Team } from "../../types/domino";
 
 interface TeamRegistrationProps {
   teams: Team[];
   onAddTeam: (name: string, p1: string, p2: string) => void;
+  onImportTeams?: (importedTeams: Team[]) => void;
   onDeleteTeam: (id: string) => void;
   onGenerateBracket: () => void;
 }
@@ -13,6 +16,7 @@ interface TeamRegistrationProps {
 export function TeamRegistration({
   teams,
   onAddTeam,
+  onImportTeams,
   onDeleteTeam,
   onGenerateBracket,
 }: TeamRegistrationProps) {
@@ -31,9 +35,71 @@ export function TeamRegistration({
     setPlayer2("");
   };
 
+  const handleImportCSV = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ["text/csv", "application/vnd.ms-excel", "text/comma-separated-values", ".csv", "*/*"],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) return;
+
+      const fileUri = result.assets[0].uri;
+      const fileContent = await FileSystem.readAsStringAsync(fileUri);
+      
+      const lines = fileContent.split("\n");
+      const importedTeams: Team[] = [];
+      let importedCount = 0;
+
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i].trim();
+        if (!line) continue;
+        
+        const columns = line.split(",");
+        if (columns.length >= 1) {
+          const teamName = columns[0].trim();
+          const player1 = columns.length > 1 ? columns[1].trim() : "Desconhecido";
+          const player2 = columns.length > 2 ? columns[2].trim() : "Desconhecido";
+          
+          if (teamName.toLowerCase() === "nome da dupla" || teamName.toLowerCase() === "time") continue;
+
+          if (teamName) {
+            importedTeams.push({
+              id: `csv-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: teamName,
+              players: [player1, player2],
+              createdAt: new Date().toISOString(),
+              source: "csv",
+            });
+            importedCount++;
+          }
+        }
+      }
+      
+      if (importedTeams.length > 0 && onImportTeams) {
+        onImportTeams(importedTeams);
+        Alert.alert("Sucesso", `${importedCount} duplas importadas com sucesso do CSV!`);
+      } else {
+        Alert.alert("Aviso", "Nenhuma dupla válida encontrada no arquivo CSV.");
+      }
+    } catch (error) {
+      Alert.alert("Erro", "Não foi possível importar o arquivo CSV.");
+      console.error(error);
+    }
+  };
+
   return (
     <ScrollView className="flex-1 p-4 mb-10 space-y-6">
       
+      {/* Importar CSV */}
+      <TouchableOpacity
+        onPress={handleImportCSV}
+        className="bg-green-600 active:bg-green-700 rounded-2xl p-4 flex-row items-center justify-center gap-2 shadow-sm"
+      >
+        <Ionicons name="document-text" size={20} color="white" />
+        <Text className="text-white font-bold text-sm tracking-wide">Importar de Arquivo CSV</Text>
+      </TouchableOpacity>
+
       {/* Manual Form */}
       <View className="bg-[#e6ddca] dark:bg-[#1c1c1c] rounded-2xl p-5 border border-[#d8ccb4] dark:border-[#262626] mb-6">
         <View className="flex-row items-center gap-2 mb-4">

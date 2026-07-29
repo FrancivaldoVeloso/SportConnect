@@ -12,10 +12,20 @@ export function EditTournamentScreen({ route, navigation }: any) {
   const { torneio } = route.params;
   const { user } = React.useContext(AuthContext);
   
+  const parseHoraInicio = (horaString: string) => {
+    if (!horaString) return new Date(new Date().setHours(12, 0, 0, 0));
+    const [hours, minutes] = horaString.split(':');
+    const date = new Date();
+    date.setHours(parseInt(hours, 10), parseInt(minutes, 10), 0, 0);
+    return date;
+  };
+
   const [nome, setNome] = useState(torneio.nome);
   const [modalidade, setModalidade] = useState(torneio.modalidade);
   const [dataInicio, setDataInicio] = useState(new Date(torneio.data_inicio + 'T12:00:00Z'));
+  const [horaInicio, setHoraInicio] = useState(parseHoraInicio(torneio.hora_inicio));
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
   const [local, setLocal] = useState(torneio.local);
   const [numeroMaxTimes, setNumeroMaxTimes] = useState(torneio.numero_max_times.toString());
   const [valorInscricao, setValorInscricao] = useState(torneio.valor_inscricao.toString());
@@ -30,8 +40,9 @@ export function EditTournamentScreen({ route, navigation }: any) {
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       allowsEditing: true,
+      aspect: [16, 9],
       quality: 0.8,
     });
 
@@ -58,10 +69,12 @@ export function EditTournamentScreen({ route, navigation }: any) {
       nome,
       modalidade,
       data_inicio: dataInicio.toISOString().split('T')[0],
+      hora_inicio: horaInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
       local,
       numero_max_times: parseInt(numeroMaxTimes, 10),
       valor_inscricao: parseFloat(valorInscricao),
       descricao,
+      capa_url: capaUrl,
     }).eq('id', torneio.id);
 
     setLoading(false);
@@ -72,6 +85,31 @@ export function EditTournamentScreen({ route, navigation }: any) {
       Alert.alert('Sucesso', 'Torneio atualizado com sucesso!');
       navigation.goBack();
     }
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Excluir Torneio',
+      'Tem certeza que deseja excluir este torneio? Esta ação não pode ser desfeita.',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        { 
+          text: 'Excluir', 
+          style: 'destructive',
+          onPress: async () => {
+            setLoading(true);
+            const { error } = await supabase.from('torneios').delete().eq('id', torneio.id);
+            setLoading(false);
+            if (error) {
+              Alert.alert('Erro', 'Não foi possível excluir o torneio: ' + error.message);
+            } else {
+              Alert.alert('Sucesso', 'Torneio excluído com sucesso.');
+              navigation.popToTop();
+            }
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -100,7 +138,7 @@ export function EditTournamentScreen({ route, navigation }: any) {
 
         <Input 
           label="Nome do Torneio" 
-          placeholder="Ex: Taça Picos de Dominó" 
+          placeholder="Taça Picos de Dominó" 
           value={nome}
           onChangeText={setNome}
         />
@@ -108,7 +146,7 @@ export function EditTournamentScreen({ route, navigation }: any) {
         <View className="mb-4">
           <Text className="text-gray-500 dark:text-gray-400 font-bold mb-2 ml-1 text-sm uppercase tracking-wider">Descrição</Text>
           <Input 
-            placeholder="Ex: O maior torneio da região..." 
+            placeholder="O maior torneio da região..." 
             value={descricao}
             onChangeText={setDescricao}
           />
@@ -158,17 +196,29 @@ export function EditTournamentScreen({ route, navigation }: any) {
           </View>
         )}
         
-        <View className="mb-4">
-          <Text className="text-gray-500 dark:text-gray-400 font-bold mb-2 ml-1 text-sm uppercase tracking-wider">Data de Início</Text>
-          <TouchableOpacity 
-            onPress={() => setShowDatePicker(true)}
-            className="bg-[#e6ddca] dark:bg-brand-surface border border-[#d8ccb4] dark:border-brand-border-focus rounded-xl px-4 py-4 flex-row items-center"
-          >
-            <Text className="text-gray-900 dark:text-white font-bold flex-1">
-              {dataInicio.toLocaleDateString('pt-BR')}
-            </Text>
-            <Text className="text-brand-primary dark:text-brand-electric-light text-xs font-bold uppercase">Alterar</Text>
-          </TouchableOpacity>
+        <View className="flex-row space-x-4 mb-4">
+          <View className="flex-1 mr-2">
+            <Text className="text-gray-500 dark:text-gray-400 font-bold mb-2 ml-1 text-sm uppercase tracking-wider">Data de Início</Text>
+            <TouchableOpacity 
+              onPress={() => setShowDatePicker(true)}
+              className="bg-[#e6ddca] dark:bg-brand-surface border border-[#d8ccb4] dark:border-brand-border-focus rounded-xl px-4 py-4 flex-row items-center"
+            >
+              <Text className="text-gray-900 dark:text-white font-bold flex-1">
+                {dataInicio.toLocaleDateString('pt-BR')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+          <View className="flex-1 ml-2">
+            <Text className="text-gray-500 dark:text-gray-400 font-bold mb-2 ml-1 text-sm uppercase tracking-wider">Horário</Text>
+            <TouchableOpacity 
+              onPress={() => setShowTimePicker(true)}
+              className="bg-[#e6ddca] dark:bg-brand-surface border border-[#d8ccb4] dark:border-brand-border-focus rounded-xl px-4 py-4 flex-row items-center"
+            >
+              <Text className="text-gray-900 dark:text-white font-bold flex-1">
+                {horaInicio.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+              </Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {showDatePicker && (
@@ -185,16 +235,30 @@ export function EditTournamentScreen({ route, navigation }: any) {
           />
         )}
         
+        {showTimePicker && (
+          <DateTimePicker
+            value={horaInicio}
+            mode="time"
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+            onChange={(event, selectedDate) => {
+              setShowTimePicker(false);
+              if (selectedDate) {
+                setHoraInicio(selectedDate);
+              }
+            }}
+          />
+        )}
+        
         <Input 
           label="Local" 
-          placeholder="Ex: Quadra Poliesportiva" 
+          placeholder="Quadra Poliesportiva" 
           value={local}
           onChangeText={setLocal}
         />
         
         <Input 
           label="Número de Vagas (Times/Duplas)" 
-          placeholder="Ex: 16" 
+          placeholder="16" 
           keyboardType="numeric"
           value={numeroMaxTimes}
           onChangeText={setNumeroMaxTimes}
@@ -202,14 +266,14 @@ export function EditTournamentScreen({ route, navigation }: any) {
         
         <Input 
           label="Valor da Inscrição (R$)" 
-          placeholder="Ex: 50.00" 
+          placeholder="50.00" 
           keyboardType="numeric"
           value={valorInscricao}
           onChangeText={setValorInscricao}
         />
 
         <TouchableOpacity 
-          className="bg-brand-primary dark:bg-brand-electric-light rounded-xl py-4 items-center shadow-sm"
+          className="bg-brand-primary dark:bg-brand-electric-light rounded-xl py-4 items-center shadow-sm mb-4"
           onPress={handleUpdate}
           disabled={loading}
         >
@@ -217,6 +281,18 @@ export function EditTournamentScreen({ route, navigation }: any) {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text className="text-white dark:text-[#0a0a0a] font-bold text-lg">Salvar Alterações</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity 
+          className="bg-red-100 dark:bg-red-900/20 border border-red-200 dark:border-red-900/50 rounded-xl py-4 items-center shadow-sm mb-8"
+          onPress={handleDelete}
+          disabled={loading}
+        >
+          {loading ? (
+            <ActivityIndicator color="#DC2626" />
+          ) : (
+            <Text className="text-red-600 dark:text-red-400 font-bold text-lg">Excluir Torneio</Text>
           )}
         </TouchableOpacity>
       </ScrollView>

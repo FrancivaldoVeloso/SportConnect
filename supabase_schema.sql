@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS public.torneios (
     capa_url VARCHAR,
     descricao TEXT,
     categoria_genero VARCHAR,
+    hora_inicio VARCHAR,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -185,5 +186,25 @@ DO $$ BEGIN
 EXCEPTION WHEN duplicate_object THEN null; END $$;
 
 DO $$ BEGIN
-    CREATE POLICY "Acesso total reservas" ON public.reservas FOR ALL USING (true) WITH CHECK (true);
 EXCEPTION WHEN duplicate_object THEN null; END $$;
+
+-- ==========================================
+-- GARANTIA DE COLUNAS (Para atualizar tabelas antigas)
+-- ==========================================
+ALTER TABLE public.torneios ADD COLUMN IF NOT EXISTS capa_url VARCHAR;
+ALTER TABLE public.torneios ADD COLUMN IF NOT EXISTS categoria_genero VARCHAR;
+ALTER TABLE public.torneios ADD COLUMN IF NOT EXISTS descricao TEXT;
+ALTER TABLE public.torneios ADD COLUMN IF NOT EXISTS hora_inicio VARCHAR;
+
+ALTER TABLE public.times ADD COLUMN IF NOT EXISTS capitao_id UUID REFERENCES public.usuarios(id) ON DELETE SET NULL;
+ALTER TABLE public.times ADD COLUMN IF NOT EXISTS categoria VARCHAR;
+ALTER TABLE public.times ADD COLUMN IF NOT EXISTS status VARCHAR DEFAULT 'CONFIRMED';
+ALTER TABLE public.times ADD COLUMN IF NOT EXISTS player1 VARCHAR;
+ALTER TABLE public.times ADD COLUMN IF NOT EXISTS player2 VARCHAR;
+
+ALTER TABLE public.inscricoes ADD COLUMN IF NOT EXISTS comprovante_pix_url VARCHAR;
+
+ALTER TABLE public.partidas ADD COLUMN IF NOT EXISTS sets_a INTEGER DEFAULT 0;
+ALTER TABLE public.partidas ADD COLUMN IF NOT EXISTS sets_b INTEGER DEFAULT 0;
+
+

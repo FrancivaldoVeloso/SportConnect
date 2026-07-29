@@ -73,27 +73,7 @@ export function DashboardScreen({ navigation }: any) {
     }
   };
 
-  const handleDeleteTournament = (id: string, nome: string) => {
-    Alert.alert(
-      "Excluir Torneio",
-      `Tem certeza que deseja excluir "${nome}"? Isso apagará todas as inscrições e partidas relacionadas.`,
-      [
-        { text: "Cancelar", style: "cancel" },
-        { 
-          text: "Excluir", 
-          style: "destructive",
-          onPress: async () => {
-            const { error } = await supabase.from('torneios').delete().eq('id', id);
-            if (error) {
-              Alert.alert("Erro", "Não foi possível excluir o torneio.");
-            } else {
-              fetchDashboardData();
-            }
-          }
-        }
-      ]
-    );
-  };
+
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
@@ -188,7 +168,11 @@ export function DashboardScreen({ navigation }: any) {
               </View>
             ) : (
               torneios.map(torneio => (
-                <View key={torneio.id} className="bg-[#e6ddca] dark:bg-brand-surface mb-4 rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm">
+                <TouchableOpacity 
+                  key={torneio.id} 
+                  className="bg-[#e6ddca] dark:bg-brand-surface mb-4 rounded-xl p-5 border border-[#d8ccb4] dark:border-brand-border-focus shadow-sm"
+                  onPress={() => navigation.navigate('TournamentManager', { torneio })}
+                >
                   <View className="flex-row justify-between items-start mb-2">
                     <Text className="text-gray-900 dark:text-white font-bold text-lg flex-1">{torneio.nome}</Text>
                     <View className="bg-gray-100 dark:bg-brand-border px-2 py-1 rounded-md ml-2">
@@ -214,32 +198,7 @@ export function DashboardScreen({ navigation }: any) {
                     </View>
                   </View>
 
-                  <View className="flex-row justify-end mt-4 pt-4 border-t border-gray-100 dark:border-brand-border-focus space-x-2">
-                    <TouchableOpacity 
-                      onPress={() => navigation.navigate('TournamentManager', { torneio })}
-                      className="flex-row items-center bg-brand-primary dark:bg-brand-electric-light px-3 py-1.5 rounded-lg"
-                    >
-                      <Ionicons name="settings" size={14} color={isDark ? "#0a0a0a" : "#fff"} />
-                      <Text className="ml-1 text-white dark:text-[#0a0a0a] text-xs font-bold uppercase">Gerenciar</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity 
-                      onPress={() => navigation.navigate('EditTournament', { torneio })}
-                      className="flex-row items-center bg-gray-100 dark:bg-[#333] px-3 py-1.5 rounded-lg"
-                    >
-                      <Ionicons name="pencil" size={14} color={isDark ? "#3B82F6" : "#2563EB"} />
-                      <Text className="ml-1 text-brand-primary dark:text-brand-electric-light text-xs font-bold uppercase">Editar</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity 
-                      onPress={() => handleDeleteTournament(torneio.id, torneio.nome)}
-                      className="flex-row items-center bg-red-50 dark:bg-red-900/20 px-3 py-1.5 rounded-lg"
-                    >
-                      <Ionicons name="trash" size={14} color="#EF4444" />
-                      <Text className="ml-1 text-red-500 text-xs font-bold uppercase">Excluir</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
+                </TouchableOpacity>
               ))
             )}
             

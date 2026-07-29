@@ -3,6 +3,8 @@ import { View, Text, TouchableOpacity, ScrollView, TextInput, Alert, StyleSheet,
 import { Ionicons } from '@expo/vector-icons';
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
+import * as DocumentPicker from 'expo-document-picker';
+import * as FileSystem from 'expo-file-system';
 import type { PartidaVolei, JogoChaveamento } from './VoleiTypes';
 import { computarPonto, subtrairPonto, encerrarPartidaManualmente } from './motorVolei';
 import { supabase } from '../../services/supabase';
@@ -13,7 +15,7 @@ interface TimeDB {
   capitao_id?: string;
 }
 
-export function VoleiEngine() {
+export function VoleiEngine({ torneio }: { torneio: any }) {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -28,12 +30,92 @@ export function VoleiEngine() {
   }, []);
 
   const carregarTimes = async () => {
+    if (!torneio?.id) return;
     try {
-      const { data, error } = await supabase.from('times').select('*');
+      const { data, error } = await supabase
+        .from('inscricoes')
+        .select(`
+          times (
+            id,
+            nome,
+            capitao_id
+          )
+        `)
+        .eq('torneio_id', torneio.id)
+        .eq('status', 'aprovado');
+        
       if (error) throw error;
-      setTimesDB(data || []);
+      if (data) {
+        const timesConfirmados = data.map(insc => insc.times).flat().filter(Boolean);
+        setTimesDB(timesConfirmados as unknown as TimeDB[]);
+      }
     } catch (err) {
-      console.error("Erro ao carregar times:", err);
+      console.error("Erro ao carregar inscritos:", err);
+    }
+  };
+
+  const handleImportCSV = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['text/csv', 'application/vnd.ms-excel', 'text/plain'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) return;
+      const fileUri = result.assets[0].uri;
+      const fileContent = await FileSystem.readAsStringAsync(fileUri, { encoding: FileSystem.EncodingType.UTF8 });
+      const lines = fileContent.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+      
+      const importedNames: string[] = [];
+      for (let i = 0; i < lines.length; i++) {
+        const line = lines[i];
+        if (i === 0 && line.toLowerCase().includes('nome')) continue; 
+        
+        let nome = line.split(',')[0].trim();
+        if (nome) importedNames.push(nome);
+      }
+
+      if (importedNames.length === 0) {
+        Alert.alert('Aviso', 'Nenhum nome válido encontrado no arquivo.');
+        return;
+      }
+
+      Alert.alert(
+        'Importar Participantes',
+        `Foram encontrados ${importedNames.length} participantes. Deseja importá-los para o banco de dados e inscrevê-los neste torneio?`,
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          {
+            text: 'Importar',
+            onPress: async () => {
+              try {
+                const teamsToInsert = importedNames.map(nome => ({ nome, categoria: 'Geral' }));
+                const { data: insertedTeams, error: insertError } = await supabase.from('times').insert(teamsToInsert).select();
+                
+                if (insertError) throw insertError;
+
+                if (insertedTeams) {
+                  const inscricoesToInsert = insertedTeams.map(t => ({
+                    torneio_id: torneio.id,
+                    time_id: t.id,
+                    status: 'aprovado'
+                  }));
+                  
+                  const { error: inscError } = await supabase.from('inscricoes').insert(inscricoesToInsert);
+                  if (inscError) throw inscError;
+                }
+                
+                Alert.alert('Sucesso', 'Participantes importados com sucesso!');
+                carregarTimes();
+              } catch (e) {
+                Alert.alert('Erro', 'Falha ao importar: ' + (e as any).message);
+              }
+            }
+          }
+        ]
+      );
+    } catch (e) {
+      Alert.alert('Erro', 'Não foi possível ler o arquivo CSV.');
     }
   };
   // --- ESTADOS DO PLACAR E TORNEIO ---
@@ -547,7 +629,16 @@ export function VoleiEngine() {
       <ScrollView className="flex-1 p-4 bg-[#f2ece0] dark:bg-brand-bg">
         {!campeonatoIniciado ? (
           <View className="bg-[#e6ddca] dark:bg-brand-surface p-5 rounded-xl border border-[#d8ccb4] dark:border-brand-border-focus">
-            <Text className="text-xl font-bold text-brand-primary dark:text-brand-electric-light mb-4 text-center">🏐 Configurar Times do Vôlei</Text>
+            <View className="flex-row justify-between items-center mb-4">
+              <Text className="text-xl font-bold text-brand-primary dark:text-brand-electric-light">🏐 Participantes</Text>
+              <TouchableOpacity 
+                onPress={handleImportCSV}
+                className="bg-green-600 dark:bg-green-700 px-3 py-2 rounded-lg flex-row items-center"
+              >
+                <Ionicons name="document-text" size={16} color="#fff" />
+                <Text className="text-white font-bold text-xs ml-1">Importar CSV</Text>
+              </TouchableOpacity>
+            </View>
             
             <View className="flex-row mb-4">
               <ScrollView horizontal className="flex-row space-x-2">
