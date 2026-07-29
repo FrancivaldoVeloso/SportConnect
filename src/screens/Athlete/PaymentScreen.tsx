@@ -35,14 +35,25 @@ export function PaymentScreen({ route, navigation }: any) {
   };
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      quality: 0.8,
-    });
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Aviso', 'Precisamos de permissão para acessar suas fotos para anexar o comprovante.');
+        return;
+      }
 
-    if (!result.canceled) {
-      setComprovanteUri(result.assets[0].uri);
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.5,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setComprovanteUri(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Erro ao abrir galeria:", error);
+      Alert.alert('Erro', 'Não foi possível carregar a galeria de imagens.');
     }
   };
 
@@ -72,7 +83,7 @@ export function PaymentScreen({ route, navigation }: any) {
       if (error) throw error;
 
       Alert.alert('Sucesso!', 'Sua inscrição foi enviada e está aguardando aprovação do organizador.', [
-        { text: 'OK', onPress: () => navigation.navigate('Feed') }
+        { text: 'OK', onPress: () => navigation.reset({ index: 0, routes: [{ name: 'AthleteTabs' }] }) }
       ]);
 
     } catch (error: any) {

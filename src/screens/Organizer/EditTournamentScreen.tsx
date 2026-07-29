@@ -46,15 +46,25 @@ export function EditTournamentScreen({ route, navigation }: any) {
   const requiresGender = ['Vôlei', 'Futsal', 'Futebol'].includes(modalidade);
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [16, 9],
-      quality: 0.8,
-    });
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Aviso', 'Precisamos de permissão para acessar suas fotos para alterar a capa do torneio.');
+        return;
+      }
 
-    if (!result.canceled) {
-      setCapaUrl(result.assets[0].uri);
+      let result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: false,
+        quality: 0.5,
+      });
+
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setCapaUrl(result.assets[0].uri);
+      }
+    } catch (error) {
+      console.error("Erro ao abrir galeria:", error);
+      Alert.alert('Erro', 'Não foi possível carregar a galeria de imagens.');
     }
   };
 
