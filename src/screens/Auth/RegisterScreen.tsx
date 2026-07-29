@@ -10,12 +10,13 @@ export function RegisterScreen({ navigation }: any) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [modalidade, setModalidade] = useState('');
   const [loading, setLoading] = useState(false);
   
   const { signIn } = useContext(AuthContext);
 
   async function handleRegister() {
-    if (!nome || !email || !password || !confirmPassword) {
+    if (!nome || !email || !password || !confirmPassword || !modalidade) {
       Alert.alert('Erro', 'Preencha todos os campos obrigatórios.');
       return;
     }
@@ -38,7 +39,7 @@ export function RegisterScreen({ navigation }: any) {
       email: email.toLowerCase().trim(),
       senha: password, // NOTA: Num app real, senhas DEVEM ser hasheadas (ex: bcrypt) antes de salvar.
       tipo_perfil: 'atleta',
-      modalidade_principal: 'Dominó em Duplas'
+      modalidade_principal: modalidade
     }]).select().single();
 
     setLoading(false);
@@ -95,6 +96,13 @@ export function RegisterScreen({ navigation }: any) {
           autoCapitalize="none"
           value={email}
           onChangeText={setEmail}
+        />
+
+        <Input 
+          label="Esporte Preferido" 
+          placeholder="Ex: Futebol, Vôlei, Dominó..." 
+          value={modalidade}
+          onChangeText={setModalidade}
         />
         
         <Input 

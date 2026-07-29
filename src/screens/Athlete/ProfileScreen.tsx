@@ -29,7 +29,7 @@ export function ProfileScreen({ navigation }: any) {
   const [receitaTotal, setReceitaTotal] = useState(0);
 
   const userName = user?.nome || 'Usuário';
-  const profileImage = user?.foto_perfil || 'https://images.unsplash.com/photo-1599566150163-29194dcaad36?q=80&w=200&auto=format&fit=crop';
+  const profileImage = user?.foto_perfil;
   const isDark = colorScheme === 'dark';
 
   useEffect(() => {
@@ -316,8 +316,10 @@ export function ProfileScreen({ navigation }: any) {
             <View className="w-24 h-24 rounded-full bg-gray-100 dark:bg-brand-border mb-4 border-4 border-brand-primary dark:border-brand-electric-light overflow-hidden justify-center items-center shadow-md">
               {uploading ? (
                 <ActivityIndicator color={isDark ? '#3B82F6' : '#2563EB'} />
-              ) : (
+              ) : profileImage ? (
                 <Image source={{ uri: profileImage }} className="w-full h-full" />
+              ) : (
+                <Ionicons name="person" size={50} color={isDark ? '#666' : '#999'} />
               )}
               <View className="absolute bottom-0 w-full bg-black/60 py-1 items-center">
                 <Ionicons name="camera" size={10} color="#FFF" />
