@@ -11,8 +11,12 @@ export function HubScreen({ navigation }: any) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetchTorneios();
-  }, []);
+    fetchTorneios(); // initial fetch
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchTorneios();
+    });
+    return unsubscribe;
+  }, [navigation]);
 
   const fetchTorneios = async () => {
     try {
